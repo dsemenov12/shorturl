@@ -9,6 +9,8 @@ type ShortURLListMap map[string] string
 
 var ShortURLList ShortURLListMap
 
+const shortKey = "EwHXdJfB"
+
 func postRequest(res http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodPost {
 		http.Error(res, "Only POST requests are allowed!", http.StatusMethodNotAllowed)
@@ -25,7 +27,7 @@ func postRequest(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	
-	ShortURLList["EwHXdJfB"] = string(body);
+	ShortURLList[shortKey] = string(body);
 
 	res.Header().Set("Content-Type", "text/plain")
 	res.Header().Set("Content-Length", "30")
@@ -39,7 +41,7 @@ func redirect(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	http.Redirect(res, req, ShortURLList["EwHXdJfB"], http.StatusTemporaryRedirect)
+	http.Redirect(res, req, ShortURLList[shortKey], http.StatusTemporaryRedirect)
 }
 
 func main() {
