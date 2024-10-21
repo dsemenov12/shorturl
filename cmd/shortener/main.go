@@ -1,8 +1,13 @@
 package main
 
 import (
+	"io"
 	"net/http"
 )
+
+type ShortURLListMap map[string] string
+
+var ShortURLList ShortURLListMap
 
 func postRequest(res http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodPost {
@@ -10,7 +15,17 @@ func postRequest(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	ShortURLList = make(ShortURLListMap, 1)
+
 	shortURL := "http://localhost:8080/EwHXdJfB"
+
+	body, err := io.ReadAll(req.Body)
+	if (err != nil) {
+		http.Error(res, "error", http.StatusBadRequest)
+		return
+	}
+	
+	ShortURLList["EwHXdJfB"] = string(body);
 
 	res.Header().Set("Content-Type", "text/plain")
 	res.Header().Set("Content-Length", "30")
@@ -24,7 +39,7 @@ func redirect(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	http.Redirect(res, req, "http://h9jcyyhkkwuxrp.com/fpnbsiqdle", http.StatusTemporaryRedirect)
+	http.Redirect(res, req, ShortURLList["EwHXdJfB"], http.StatusTemporaryRedirect)
 }
 
 func main() {
