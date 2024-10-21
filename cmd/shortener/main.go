@@ -10,12 +10,12 @@ func postRequest(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	shortUrl := "http://localhost:8080/EwHXdJfB"
+	shortURL := "http://localhost:8080/EwHXdJfB"
 
 	res.Header().Set("Content-Type", "text/plain")
 	res.Header().Set("Content-Length", "30")
 	res.WriteHeader(http.StatusCreated)
-	res.Write([]byte(shortUrl))
+	res.Write([]byte(shortURL))
 }
 
 func redirect(res http.ResponseWriter, req *http.Request) {
@@ -24,7 +24,7 @@ func redirect(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	http.Redirect(res, req, "https://practicum.yandex.ru/", http.StatusMovedPermanently)
+	http.Redirect(res, req, "http://h9jcyyhkkwuxrp.com/fpnbsiqdle", http.StatusTemporaryRedirect)
 }
 
 func main() {
