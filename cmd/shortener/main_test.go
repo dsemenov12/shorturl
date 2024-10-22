@@ -45,6 +45,8 @@ func TestPostURL(t *testing.T) {
 			handlers.PostURL(response, request)
 
 			res := response.Result()
+
+			defer res.Body.Close()
             
             assert.Equal(t, test.want.code, res.StatusCode)
 			assert.Equal(t, test.want.contentType, res.Header.Get("Content-Type"))
@@ -75,6 +77,8 @@ func TestRedirect(t *testing.T) {
 			handlers.Redirect(response, request)
 
 			res := response.Result()
+
+			defer res.Body.Close()
             
             assert.Equal(t, test.want.code, res.StatusCode)
 		})
