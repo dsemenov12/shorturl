@@ -3,13 +3,13 @@ package handlers
 import (
 	"io"
 	"net/http"
+	"github.com/go-chi/chi/v5"
+	"github.com/dsemenov12/shorturl/internal/util"
 )
 
 type ShortURLListMap map[string] string
 
 var ShortURLList ShortURLListMap
-
-const shortKey = "EwHXdJfB"
 
 func PostURL(res http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodPost {
@@ -17,8 +17,9 @@ func PostURL(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	ShortURLList = make(ShortURLListMap, 1)
+	ShortURLList = make(ShortURLListMap, 100)
 
+	shortKey := util.RandStringBytes(8)
 	shortURL := "http://" + req.Host + "/" + shortKey
 
 	body, err := io.ReadAll(req.Body)
@@ -40,6 +41,8 @@ func Redirect(res http.ResponseWriter, req *http.Request) {
 		http.Error(res, "Only GET requests are allowed!", http.StatusMethodNotAllowed)
 		return
 	}
+
+	shortKey := chi.URLParam(req, "id")
 
 	http.Redirect(res, req, ShortURLList[shortKey], http.StatusTemporaryRedirect)
 }
