@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"net/url"
 	"github.com/go-chi/chi/v5"
 	"github.com/dsemenov12/shorturl/internal/handlers"
 	"github.com/dsemenov12/shorturl/internal/config"
@@ -10,10 +11,15 @@ import (
 func main() {
 	config.ParseFlags()
 
+	baseUrl, error := url.Parse(config.FlagBaseAddr)
+    if error != nil {
+        panic(error)
+    }
+
 	router := chi.NewRouter()
 
 	router.Post("/", handlers.PostURL)
-	router.Get("/{id}", handlers.Redirect)
+	router.Get(baseUrl.Path + "/{id}", handlers.Redirect)
 
 	err := http.ListenAndServe(config.FlagRunAddr, router)
     if err != nil {

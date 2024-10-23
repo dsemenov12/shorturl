@@ -1,13 +1,14 @@
 package handlers
 
 import (
+	"fmt"
+	"os"
 	"io"
 	"net/http"
 
 	"github.com/dsemenov12/shorturl/internal/config"
 	"github.com/dsemenov12/shorturl/internal/util"
 	"github.com/go-chi/chi/v5"
-	//"github.com/dsemenov12/shorturl/internal/config"
 )
 
 type ShortURLListMap map[string] string
@@ -16,15 +17,14 @@ var ShortURLList ShortURLListMap
 
 
 func PostURL(res http.ResponseWriter, req *http.Request) {
-	if req.Method != http.MethodPost {
-		http.Error(res, "Only POST requests are allowed!", http.StatusMethodNotAllowed)
-		return
-	}
-
 	ShortURLList = make(ShortURLListMap, 100)
 
 	shortKey := util.RandStringBytes(8)
-	shortURL := "http://" + config.FlagRunAddr + "/" + shortKey
+	shortURL := config.FlagBaseAddr + "/" + shortKey
+
+	fmt.Fprintln(os.Stdout, config.FlagRunAddr)
+	fmt.Fprintln(os.Stdout, config.FlagBaseAddr)
+	fmt.Fprintln(os.Stdout, shortURL)
 
 	body, err := io.ReadAll(req.Body)
 	if (err != nil) {
@@ -41,11 +41,6 @@ func PostURL(res http.ResponseWriter, req *http.Request) {
 }
 
 func Redirect(res http.ResponseWriter, req *http.Request) {
-	if req.Method != http.MethodGet {
-		http.Error(res, "Only GET requests are allowed!", http.StatusMethodNotAllowed)
-		return
-	}
-
 	shortKey := chi.URLParam(req, "id")
 
 	http.Redirect(res, req, ShortURLList[shortKey], http.StatusTemporaryRedirect)
