@@ -1,8 +1,6 @@
 package handlers
 
 import (
-	"fmt"
-	"os"
 	"io"
 	"net/http"
 
@@ -21,10 +19,6 @@ func PostURL(res http.ResponseWriter, req *http.Request) {
 
 	shortKey := util.RandStringBytes(8)
 	shortURL := config.FlagBaseAddr + "/" + shortKey
-
-	fmt.Fprintln(os.Stdout, config.FlagRunAddr)
-	fmt.Fprintln(os.Stdout, config.FlagBaseAddr)
-	fmt.Fprintln(os.Stdout, shortURL)
 
 	body, err := io.ReadAll(req.Body)
 	if (err != nil) {

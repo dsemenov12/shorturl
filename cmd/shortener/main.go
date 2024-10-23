@@ -11,7 +11,7 @@ import (
 func main() {
 	config.ParseFlags()
 
-	baseUrl, error := url.Parse(config.FlagBaseAddr)
+	baseURL, error := url.Parse(config.FlagBaseAddr)
     if error != nil {
         panic(error)
     }
@@ -19,7 +19,7 @@ func main() {
 	router := chi.NewRouter()
 
 	router.Post("/", handlers.PostURL)
-	router.Get(baseUrl.Path + "/{id}", handlers.Redirect)
+	router.Get(baseURL.Path + "/{id}", handlers.Redirect)
 
 	err := http.ListenAndServe(config.FlagRunAddr, router)
     if err != nil {
