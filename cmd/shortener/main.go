@@ -21,8 +21,8 @@ func main() {
 	router.Post("/", handlers.PostURL)
 	router.Get(baseURL.Path + "/{id}", handlers.Redirect)
 
-	err := http.ListenAndServe(config.FlagRunAddr, router)
-    if err != nil {
-        panic(err)
+	errorServe := http.ListenAndServe(config.FlagRunAddr, router)
+    if errorServe != nil {
+        panic(errorServe)
     }
 }
