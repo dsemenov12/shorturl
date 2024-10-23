@@ -12,6 +12,7 @@ type ShortURLListMap map[string] string
 
 var ShortURLList ShortURLListMap
 
+
 func PostURL(res http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodPost {
 		http.Error(res, "Only POST requests are allowed!", http.StatusMethodNotAllowed)
@@ -21,7 +22,7 @@ func PostURL(res http.ResponseWriter, req *http.Request) {
 	ShortURLList = make(ShortURLListMap, 100)
 
 	shortKey := util.RandStringBytes(8)
-	shortURL := config.FlagBaseAddr + shortKey
+	shortURL := config.FlagBaseAddr + "/" +  shortKey
 
 	body, err := io.ReadAll(req.Body)
 	if (err != nil) {
