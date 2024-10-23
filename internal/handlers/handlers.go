@@ -3,9 +3,11 @@ package handlers
 import (
 	"io"
 	"net/http"
-	"github.com/go-chi/chi/v5"
-	"github.com/dsemenov12/shorturl/internal/util"
+
 	"github.com/dsemenov12/shorturl/internal/config"
+	"github.com/dsemenov12/shorturl/internal/util"
+	"github.com/go-chi/chi/v5"
+	//"github.com/dsemenov12/shorturl/internal/config"
 )
 
 type ShortURLListMap map[string] string
@@ -22,9 +24,10 @@ func PostURL(res http.ResponseWriter, req *http.Request) {
 	ShortURLList = make(ShortURLListMap, 100)
 
 	shortKey := util.RandStringBytes(8)
-	shortURL := "http://" + config.FlagRunAddr + "/" + shortKey
-	if (config.FlagBaseAddr != "") {
-		shortURL = config.FlagBaseAddr + "/" + shortKey
+	baseAddr := config.FlagBaseAddr
+	shortURL := baseAddr
+	if (config.FlagBaseAddr == "") {
+		shortURL = "http://" + config.FlagRunAddr + "/" + shortKey
 	}
 
 	body, err := io.ReadAll(req.Body)
