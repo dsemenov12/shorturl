@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"github.com/go-chi/chi/v5"
 	"github.com/dsemenov12/shorturl/internal/util"
+	"github.com/dsemenov12/shorturl/internal/config"
 )
 
 type ShortURLListMap map[string] string
@@ -20,7 +21,7 @@ func PostURL(res http.ResponseWriter, req *http.Request) {
 	ShortURLList = make(ShortURLListMap, 100)
 
 	shortKey := util.RandStringBytes(8)
-	shortURL := "http://" + req.Host + "/" + shortKey
+	shortURL := config.FlagBaseAddr + shortKey
 
 	body, err := io.ReadAll(req.Body)
 	if (err != nil) {
