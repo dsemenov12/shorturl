@@ -3,6 +3,7 @@ package handlers
 import (
 	"io"
 	"net/http"
+	"strconv"
 
 	"github.com/dsemenov12/shorturl/internal/config"
 	"github.com/dsemenov12/shorturl/internal/util"
@@ -18,7 +19,7 @@ func PostURL(res http.ResponseWriter, req *http.Request) {
 	ShortURLList = make(ShortURLListMap, 100)
 
 	shortKey := util.RandStringBytes(8)
-	shortURL := config.FlagBaseAddr //+ "/" + shortKey
+	shortURL := config.FlagBaseAddr + "/" + shortKey
 
 	body, err := io.ReadAll(req.Body)
 	if (err != nil) {
@@ -29,7 +30,7 @@ func PostURL(res http.ResponseWriter, req *http.Request) {
 	ShortURLList[shortKey] = string(body);
 
 	res.Header().Set("Content-Type", "text/plain")
-	res.Header().Set("Content-Length", "30")
+	res.Header().Set("Content-Length",  strconv.Itoa(len(shortURL)))
 	res.WriteHeader(http.StatusCreated)
 	res.Write([]byte(shortURL))
 }
