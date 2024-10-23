@@ -24,11 +24,7 @@ func PostURL(res http.ResponseWriter, req *http.Request) {
 	ShortURLList = make(ShortURLListMap, 100)
 
 	shortKey := util.RandStringBytes(8)
-	baseAddr := config.FlagBaseAddr
-	shortURL := baseAddr
-	if (config.FlagBaseAddr == "") {
-		shortURL = "http://" + config.FlagRunAddr + "/" + shortKey
-	}
+	shortURL := "http://" + config.FlagRunAddr + "/" + shortKey
 
 	body, err := io.ReadAll(req.Body)
 	if (err != nil) {
