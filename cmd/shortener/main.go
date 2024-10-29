@@ -9,17 +9,17 @@ import (
 )
 
 func main() {
-	config.ParseFlags()
+    config.ParseFlags()
 
-	baseURL, error := url.Parse(config.FlagBaseAddr)
+    baseURL, error := url.Parse(config.FlagBaseAddr)
     if error != nil {
         panic(error)
     }
+    
+    router := chi.NewRouter()
 
-	router := chi.NewRouter()
-
-	router.Post("/", handlers.PostURL)
-	router.Get(baseURL.Path + "/{id}", handlers.Redirect)
+    router.Post("/", handlers.PostURL)
+    router.Get(baseURL.Path + "/{id}", handlers.Redirect)
 
 	errorServe := http.ListenAndServe(config.FlagRunAddr, router)
     if errorServe != nil {
