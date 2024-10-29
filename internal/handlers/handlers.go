@@ -56,7 +56,6 @@ func PostURL(res http.ResponseWriter, req *http.Request) {
 func Redirect(res http.ResponseWriter, req *http.Request) {
 	shortKey := chi.URLParam(req, "id")
 	redirectLink, err := storageObj.Get(shortKey)
-
 	if err != nil {
 		http.Error(res, "redirect not found", 404)
 	}
