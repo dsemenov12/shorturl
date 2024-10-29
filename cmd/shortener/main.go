@@ -1,11 +1,11 @@
 package main
 
 import (
-	"net/http"
-	"net/url"
-	"github.com/go-chi/chi/v5"
-	"github.com/dsemenov12/shorturl/internal/handlers"
-	"github.com/dsemenov12/shorturl/internal/config"
+    "net/http"
+    "net/url"
+    "github.com/go-chi/chi/v5"
+    "github.com/dsemenov12/shorturl/internal/handlers"
+    "github.com/dsemenov12/shorturl/internal/config"
 )
 
 func main() {
