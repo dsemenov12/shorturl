@@ -4,31 +4,14 @@ import (
 	"io"
 	"net/http"
 	"strconv"
-	"sync"
-
+    
+    "github.com/dsemenov12/shorturl/internal/structs/storage"
 	"github.com/dsemenov12/shorturl/internal/config"
 	"github.com/dsemenov12/shorturl/internal/util"
 	"github.com/go-chi/chi/v5"
 )
 
-type storage struct {
-	mx sync.Mutex
-    data map[string]string
-}
-
-func (s *storage) Get(key string) (string, error) {
-	s.mx.Lock()
-    defer s.mx.Unlock()
-    return s.data[key], nil
-}
-
-func (s *storage) Set(key string, value string) {
-	s.mx.Lock()
-    defer s.mx.Unlock()
-	s.data[key] = value
-}
-
-var storageObj = storage{data: make(map[string]string)}
+var storageObj = storage.Storage{Data: make(map[string]string)}
 
 func PostURL(res http.ResponseWriter, req *http.Request) {
 	shortKey := util.RandStringBytes(8)

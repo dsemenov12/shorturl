@@ -7,6 +7,7 @@ import (
 	"strings"
 	"io"
 
+	"github.com/dsemenov12/shorturl/internal/structs/storage"
 	"github.com/dsemenov12/shorturl/internal/handlers"
 	"github.com/stretchr/testify/assert"
 	"github.com/dsemenov12/shorturl/internal/config"
@@ -26,7 +27,7 @@ func TestPostURL(t *testing.T) {
             name: "positive test #1",
 			body: `https://practicum.yandex.ru/`,
             want: want{
-                code: 201,
+                code: http.StatusCreated,
         		contentType: "text/plain",
             },
         },
@@ -34,7 +35,7 @@ func TestPostURL(t *testing.T) {
             name: "positive test #2",
 			body: `https://practicum.yandex.ru/2323`,
             want: want{
-                code: 201,
+                code: http.StatusCreated,
         		contentType: "text/plain",
             },
         },
@@ -42,14 +43,11 @@ func TestPostURL(t *testing.T) {
             name: "negative test empty body",
 			body: ``,
             want: want{
-                code: 400,
+                code: http.StatusBadRequest,
         		contentType: "text/plain",
             },
         },
 	}
-
-	config.ParseFlags()
-
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			request := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(test.body))
@@ -75,23 +73,52 @@ func TestPostURL(t *testing.T) {
 }
 
 func TestRedirect(t *testing.T) {
+	var storageObj = storage.Storage{Data: make(map[string]string)}
+
+	storageObj.Set("bmXrsnZk", "https://practicum.yandex.ru/profile/go-advanced/")
+	storageObj.Set("NVbvbWXj", "https://practicum.yandex.ru/")
+	storageObj.Set("CztkzbdO", "https://practicum.yandex.ru/profile/")
+
 	type want struct {
         code int
+		redirectUrl string
     }
 	tests := []struct {
 		name string
+		code string
 		want want
 	}{
 		{
             name: "positive test #1",
+			code: "bmXrsnZk",
             want: want{
-                code: 307,
+                code: http.StatusTemporaryRedirect,
+				redirectUrl: "https://practicum.yandex.ru/profile/go-advanced/",
+            },
+        },
+		{
+            name: "positive test #2",
+			code: "NVbvbWXj",
+            want: want{
+                code: http.StatusTemporaryRedirect,
+				redirectUrl: "https://practicum.yandex.ru/",
+            },
+        },
+		{
+            name: "positive test #3",
+			code: "CztkzbdO",
+            want: want{
+                code: http.StatusTemporaryRedirect,
+				redirectUrl: "https://practicum.yandex.ru/profile/",
             },
         },
 	}
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			request := httptest.NewRequest(http.MethodGet, "/", nil)
+			requestUrl := config.FlagBaseAddr + "/" + test.code
+
+			request := httptest.NewRequest(http.MethodGet, requestUrl, nil)
 			response := httptest.NewRecorder()
 
 			handlers.Redirect(response, request)
