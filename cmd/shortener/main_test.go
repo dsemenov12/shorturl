@@ -81,7 +81,7 @@ func TestRedirect(t *testing.T) {
 
 	type want struct {
         code int
-		redirectUrl string
+		redirectURL string
     }
 	tests := []struct {
 		name string
@@ -93,7 +93,7 @@ func TestRedirect(t *testing.T) {
 			code: "bmXrsnZk",
             want: want{
                 code: http.StatusTemporaryRedirect,
-				redirectUrl: "https://practicum.yandex.ru/profile/go-advanced/",
+				redirectURL: "https://practicum.yandex.ru/profile/go-advanced/",
             },
         },
 		{
@@ -101,7 +101,7 @@ func TestRedirect(t *testing.T) {
 			code: "NVbvbWXj",
             want: want{
                 code: http.StatusTemporaryRedirect,
-				redirectUrl: "https://practicum.yandex.ru/",
+				redirectURL: "https://practicum.yandex.ru/",
             },
         },
 		{
@@ -109,7 +109,7 @@ func TestRedirect(t *testing.T) {
 			code: "CztkzbdO",
             want: want{
                 code: http.StatusTemporaryRedirect,
-				redirectUrl: "https://practicum.yandex.ru/profile/",
+				redirectURL: "https://practicum.yandex.ru/profile/",
             },
         },
 	}
