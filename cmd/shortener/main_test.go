@@ -116,9 +116,8 @@ func TestRedirect(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			requestUrl := config.FlagBaseAddr + "/" + test.code
-
-			request := httptest.NewRequest(http.MethodGet, requestUrl, nil)
+			requestURL := config.FlagBaseAddr + "/" + test.code
+			request := httptest.NewRequest(http.MethodGet, requestURL, nil)
 			response := httptest.NewRecorder()
 
 			handlers.Redirect(response, request)
