@@ -7,10 +7,12 @@ import (
 
 var FlagRunAddr string
 var FlagBaseAddr string
+var FlagLogLevel string
 
 func ParseFlags() {
     flag.StringVar(&FlagRunAddr, "a", "127.0.0.1:8080", "адрес запуска HTTP-сервера")
 	flag.StringVar(&FlagBaseAddr, "b", "http://127.0.0.1:8080/qsd54gFg", "базовый адрес результирующего сокращённого URL")
+	flag.StringVar(&FlagLogLevel, "l", "info", "log level")
 	
     flag.Parse()
 
