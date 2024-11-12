@@ -4,6 +4,6 @@ type InputData struct {
 	URL string `json:"url"`
 }
 
-type ResultJson struct {
+type ResultJSON struct {
 	Result string `json:"result"`
 }

@@ -35,7 +35,7 @@ func ShortenPost(res http.ResponseWriter, req *http.Request) {
 
 	storageObj.Set(shortKey, inputDataValue.URL)
 
-	var result = models.ResultJson{
+	var result = models.ResultJSON{
 		Result: shortURL,
 	}
 
