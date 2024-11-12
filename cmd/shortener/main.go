@@ -25,6 +25,7 @@ func main() {
     }
 	logger.Log.Info("Running server", zap.String("address", config.FlagRunAddr))
 
+	router.Post("/api/shorten", logger.RequestLogger(handlers.ShortenPost))
     router.Post("/", logger.RequestLogger(handlers.PostURL))
     router.Get(baseURL.Path + "/{id}", logger.RequestLogger(handlers.Redirect))
 
