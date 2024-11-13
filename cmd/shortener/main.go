@@ -26,13 +26,10 @@ func (w gzipWriter) Write(b []byte) (int, error) {
 func gzipHandle(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
-            // если gzip не поддерживается, передаём управление
-            // дальше без изменений
             next.ServeHTTP(w, r)
             return
         }
 
-        // создаём gzip.Writer поверх текущего w
         gz, err := gzip.NewWriterLevel(w, gzip.BestSpeed)
         if err != nil {
             io.WriteString(w, err.Error())
@@ -40,8 +37,20 @@ func gzipHandle(next http.Handler) http.Handler {
         }
         defer gz.Close()
 
+        sendsGzip := strings.Contains(r.Header.Get("Content-Encoding"), "gzip")
+        if sendsGzip {
+            // оборачиваем тело запроса в io.Reader с поддержкой декомпрессии
+            cr, err := gzip.NewReader(r.Body)
+            if err != nil {
+                w.WriteHeader(http.StatusInternalServerError)
+                return
+            }
+            // меняем тело запроса на новое
+            r.Body = cr
+            defer cr.Close()
+        }
+
         w.Header().Set("Content-Encoding", "gzip")
-        // передаём обработчику страницы переменную типа gzipWriter для вывода данных
         next.ServeHTTP(gzipWriter{ResponseWriter: w, Writer: gz}, r)
     })
 }
