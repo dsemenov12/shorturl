@@ -37,7 +37,7 @@ func run() error {
 
 	router.Post("/api/shorten", logger.RequestLogger(gzipmiddleware.GzipMiddleware(handlers.ShortenPost)))
     router.Post("/", logger.RequestLogger(gzipmiddleware.GzipMiddleware(handlers.PostURL)))
-    router.Get(baseURL.Path + "/{id}", logger.RequestLogger(gzipmiddleware.GzipMiddleware(handlers.Redirect)))
+    router.Get(baseURL.Path + "/{id}", logger.RequestLogger(handlers.Redirect))
 
 	error = http.ListenAndServe(config.FlagRunAddr, router)
     if error != nil {
