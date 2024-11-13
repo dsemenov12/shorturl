@@ -12,8 +12,6 @@ import (
 	"go.uber.org/zap"
 )
 
-
-
 func main() {
     if error := run(); error != nil {
         fmt.Println(error)
@@ -35,9 +33,9 @@ func run() error {
     }
 	logger.Log.Info("Running server", zap.String("address", config.FlagRunAddr))
 
-	router.Post("/api/shorten", logger.RequestLogger(gzipmiddleware.GzipMiddleware(handlers.ShortenPost)))
-    router.Post("/", logger.RequestLogger(gzipmiddleware.GzipMiddleware(handlers.PostURL)))
-    router.Get(baseURL.Path + "/{id}", logger.RequestLogger(gzipmiddleware.GzipMiddleware(handlers.Redirect)))
+	router.Post("/api/shorten", logger.RequestLogger(handlers.ShortenPost))
+    router.Post("/", logger.RequestLogger(handlers.PostURL))
+    router.Get(baseURL.Path + "/{id}", logger.RequestLogger(handlers.Redirect))
 
 	error = http.ListenAndServe(config.FlagRunAddr, router)
     if error != nil {
