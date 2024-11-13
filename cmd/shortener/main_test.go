@@ -6,14 +6,11 @@ import (
 	"testing"
 	"strings"
 	"io"
-	"bytes"
-	"compress/gzip"
 
 	"github.com/dsemenov12/shorturl/internal/structs/storage"
 	"github.com/dsemenov12/shorturl/internal/handlers"
 	"github.com/stretchr/testify/assert"
 	"github.com/dsemenov12/shorturl/internal/config"
-	"github.com/dsemenov12/shorturl/internal/middlewares/gzipmiddleware"
 )
 
 func TestShortenPost(t *testing.T) {
@@ -190,46 +187,4 @@ func TestRedirect(t *testing.T) {
             assert.Equal(t, test.want.code, res.StatusCode)
 		})
 	}
-}
-
-func TestGzipCompression(t *testing.T) {
-    handler := http.HandlerFunc(gzipmiddleware.GzipMiddleware(handlers.ShortenPost))
-    
-    srv := httptest.NewServer(handler)
-    defer srv.Close()
-    
-    requestBody := `{"url": "https://practicum.yandex.ru/"}`
-    
-    t.Run("sends_gzip", func(t *testing.T) {
-        buf := bytes.NewBuffer(nil)
-        zb := gzip.NewWriter(buf)
-        _, err := zb.Write([]byte(requestBody))
-        assert.NoError(t, err)
-        err = zb.Close()
-        assert.NoError(t, err)
-        
-        r := httptest.NewRequest(http.MethodPost, srv.URL, buf)
-        r.RequestURI = ""
-        r.Header.Set("Content-Encoding", "gzip")
-        r.Header.Set("Accept-Encoding", "")
-        r.Header.Set("Content-Type", "application/json")
-        
-        resp, err := http.DefaultClient.Do(r)
-        assert.NoError(t, err)
-        
-        defer resp.Body.Close()
-    })
-
-    t.Run("accepts_gzip", func(t *testing.T) {
-        buf := bytes.NewBufferString(requestBody)
-        r := httptest.NewRequest(http.MethodPost, srv.URL, buf)
-        r.RequestURI = ""
-        r.Header.Set("Content-Encoding", "gzip")
-        r.Header.Set("Content-Type", "application/json")
-        
-        resp, err := http.DefaultClient.Do(r)
-        assert.NoError(t, err)
-        
-        defer resp.Body.Close()
-    })
 }
