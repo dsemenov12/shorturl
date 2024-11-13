@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"strconv"
 
 	"github.com/dsemenov12/shorturl/internal/config"
 	"github.com/dsemenov12/shorturl/internal/models"
@@ -70,7 +69,6 @@ func PostURL(res http.ResponseWriter, req *http.Request) {
 	storageObj.Set(shortKey, string(body))
 
 	res.Header().Set("Content-Type", "text/plain")
-	res.Header().Set("Content-Length",  strconv.Itoa(len(shortURL)))
 	res.WriteHeader(http.StatusCreated)
 	res.Write([]byte(shortURL))
 }

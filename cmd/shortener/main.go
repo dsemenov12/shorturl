@@ -39,13 +39,11 @@ func gzipHandle(next http.Handler) http.Handler {
 
         sendsGzip := strings.Contains(r.Header.Get("Content-Encoding"), "gzip")
         if sendsGzip {
-            // оборачиваем тело запроса в io.Reader с поддержкой декомпрессии
             cr, err := gzip.NewReader(r.Body)
             if err != nil {
                 w.WriteHeader(http.StatusInternalServerError)
                 return
             }
-            // меняем тело запроса на новое
             r.Body = cr
             defer cr.Close()
         }
