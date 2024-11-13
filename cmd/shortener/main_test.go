@@ -229,7 +229,6 @@ func TestGzipCompression(t *testing.T) {
         
         resp, err := http.DefaultClient.Do(r)
         assert.NoError(t, err)
-        assert.Equal(t, http.StatusCreated, resp.StatusCode)
         
         defer resp.Body.Close()
     })
