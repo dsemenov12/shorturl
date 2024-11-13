@@ -1,16 +1,16 @@
 package handlers
 
 import (
+	"bytes"
+	"encoding/json"
 	"io"
 	"net/http"
 	"strconv"
-	"bytes"
-	"encoding/json"
-    
-    "github.com/dsemenov12/shorturl/internal/structs/storage"
+
 	"github.com/dsemenov12/shorturl/internal/config"
-	"github.com/dsemenov12/shorturl/internal/util"
 	"github.com/dsemenov12/shorturl/internal/models"
+	"github.com/dsemenov12/shorturl/internal/structs/storage"
+	"github.com/dsemenov12/shorturl/internal/util"
 	"github.com/go-chi/chi/v5"
 )
 

@@ -10,14 +10,14 @@ func GzipMiddleware(h http.HandlerFunc) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
         ow := w
 
-		if r.Header.Get("Content-Type") != "application/json" && r.Header.Get("Content-Type") != "text/html" {
-			h.ServeHTTP(w, r)
-            return
-		}
-
         acceptEncoding := r.Header.Get("Accept-Encoding")
         supportsGzip := strings.Contains(acceptEncoding, "gzip")
         if supportsGzip {
+			if r.Header.Get("Content-Type") != "application/json" && r.Header.Get("Content-Type") != "text/html" {
+				h.ServeHTTP(w, r)
+				return
+			}
+
             cw := gzip.NewCompressWriter(w)
             ow = cw
 
