@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"bytes"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -18,20 +17,24 @@ var storageObj = storage.Storage{Data: make(map[string]string)}
 
 func ShortenPost(res http.ResponseWriter, req *http.Request) {
 	var inputDataValue models.InputData
-	var buf bytes.Buffer
 
 	shortKey := util.RandStringBytes(8)
 	shortURL := config.FlagBaseAddr + "/" + shortKey
 
-	_, err := buf.ReadFrom(req.Body)
+	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		http.Error(res, "error", http.StatusBadRequest)
 		return
 	}
-	if err = json.Unmarshal(buf.Bytes(), &inputDataValue); err != nil {
+	if string(body) == "" {
+		http.Error(res, "empty body", http.StatusBadRequest)
+		return
+	}
+	if err = json.Unmarshal(body, &inputDataValue); err != nil {
 		http.Error(res, err.Error(), http.StatusBadRequest)
 		return
 	}
+	defer req.Body.Close()
 
 	storageObj.Set(shortKey, inputDataValue.URL)
 
