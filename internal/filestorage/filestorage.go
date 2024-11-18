@@ -5,14 +5,13 @@ import (
 	"encoding/json"
 	"strconv"
 	"bufio"
-	"fmt"
 
 	"github.com/dsemenov12/shorturl/internal/config"
 	"github.com/dsemenov12/shorturl/internal/structs/storage"
 )
 
-type ShortUrlJSON struct {
-	Uuid 	    string `json:"uuid"`
+type ShortURLJSON struct {
+	UUID 	    string `json:"uuid"`
 	ShortURL    string `json:"short_url"`
 	OriginalURL string `json:"original_url"`
 }
@@ -28,13 +27,13 @@ func Save(storageData map[string]string) error {
 	defer file.Close()
 
 	for key, value := range storageData {
-		shortUrlJSON := ShortUrlJSON{
-			Uuid: strconv.Itoa(iter),
+		shortURLJSON := ShortURLJSON{
+			UUID: strconv.Itoa(iter),
 			ShortURL: key,
 			OriginalURL: value,
 		}
 
-		data, err = json.Marshal(shortUrlJSON)
+		data, err = json.Marshal(shortURLJSON)
 		if err != nil {
 			return err
 		}
@@ -48,7 +47,7 @@ func Save(storageData map[string]string) error {
 }
 
 func Load() error {
-	var shortUrlJSON *ShortUrlJSON
+	var shortURLJSON *ShortURLJSON
 
 	file, err := os.OpenFile(config.FlagFileStoragePath, os.O_RDONLY, 0666)
     if err != nil {
@@ -58,14 +57,12 @@ func Load() error {
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		if err = json.Unmarshal(scanner.Bytes(), &shortUrlJSON); err != nil {
+		if err = json.Unmarshal(scanner.Bytes(), &shortURLJSON); err != nil {
 			return err
 		}
 
-		storage.StorageObj.Set(shortUrlJSON.ShortURL, shortUrlJSON.OriginalURL)
+		storage.StorageObj.Set(shortURLJSON.ShortURL, shortURLJSON.OriginalURL)
 	}
-
-	fmt.Println(storage.StorageObj.Data)
 
 	return nil
 }
