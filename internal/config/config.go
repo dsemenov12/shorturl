@@ -14,7 +14,7 @@ func ParseFlags() {
     flag.StringVar(&FlagRunAddr, "a", "127.0.0.1:8080", "адрес запуска HTTP-сервера")
 	flag.StringVar(&FlagBaseAddr, "b", "http://127.0.0.1:8080/qsd54gFg", "базовый адрес результирующего сокращённого URL")
 	flag.StringVar(&FlagLogLevel, "l", "info", "log level")
-	flag.StringVar(&FlagFileStoragePath, "f", "storage/storage.json", "путь до файла, куда сохраняются данные в формате JSON")
+	flag.StringVar(&FlagFileStoragePath, "f", "tmp/Ufen9MJ"/*"storage/storage.json"*/, "путь до файла, куда сохраняются данные в формате JSON")
 	
     flag.Parse()
 

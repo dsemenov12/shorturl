@@ -69,6 +69,7 @@ func PostURL(res http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 
 	storage.StorageObj.Set(shortKey, string(body))
+	filestorage.Save(storage.StorageObj.Data)
 
 	res.Header().Set("Content-Type", "text/plain")
 	res.WriteHeader(http.StatusCreated)
