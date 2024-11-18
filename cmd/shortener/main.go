@@ -10,6 +10,7 @@ import (
     "github.com/dsemenov12/shorturl/internal/config"
 	"github.com/dsemenov12/shorturl/internal/logger"
 	"github.com/dsemenov12/shorturl/internal/middlewares/gziphandler"
+	"github.com/dsemenov12/shorturl/internal/filestorage"
 	"go.uber.org/zap"
 )
 
@@ -21,6 +22,7 @@ func main() {
 
 func run() error {
 	config.ParseFlags()
+	filestorage.Load()
 
     baseURL, error := url.Parse(config.FlagBaseAddr)
     if error != nil {

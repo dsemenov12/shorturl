@@ -7,12 +7,11 @@ import (
 
 	"github.com/dsemenov12/shorturl/internal/config"
 	"github.com/dsemenov12/shorturl/internal/models"
-	"github.com/dsemenov12/shorturl/internal/structs/storage"
 	"github.com/dsemenov12/shorturl/internal/util"
+	"github.com/dsemenov12/shorturl/internal/filestorage"
+	"github.com/dsemenov12/shorturl/internal/structs/storage"
 	"github.com/go-chi/chi/v5"
 )
-
-var storageObj = storage.Storage{Data: make(map[string]string)}
 
 func ShortenPost(res http.ResponseWriter, req *http.Request) {
 	var inputDataValue models.InputData
@@ -35,7 +34,7 @@ func ShortenPost(res http.ResponseWriter, req *http.Request) {
 	}
 	defer req.Body.Close()
 
-	storageObj.Set(shortKey, inputDataValue.URL)
+	storage.StorageObj.Set(shortKey, inputDataValue.URL)
 
 	var result = models.ResultJSON{
 		Result: shortURL,
@@ -46,6 +45,9 @@ func ShortenPost(res http.ResponseWriter, req *http.Request) {
         http.Error(res, err.Error(), http.StatusInternalServerError)
         return
     }
+
+	filestorage.Save(storage.StorageObj.Data)
+
 	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusCreated)
 	res.Write(resp)
@@ -66,7 +68,7 @@ func PostURL(res http.ResponseWriter, req *http.Request) {
 	}
 	defer req.Body.Close()
 
-	storageObj.Set(shortKey, string(body))
+	storage.StorageObj.Set(shortKey, string(body))
 
 	res.Header().Set("Content-Type", "text/plain")
 	res.WriteHeader(http.StatusCreated)
@@ -75,7 +77,7 @@ func PostURL(res http.ResponseWriter, req *http.Request) {
 
 func Redirect(res http.ResponseWriter, req *http.Request) {
 	shortKey := chi.URLParam(req, "id")
-	redirectLink, err := storageObj.Get(shortKey)
+	redirectLink, err := storage.StorageObj.Get(shortKey)
 	if err != nil {
 		http.Error(res, "redirect not found", 404)
 	}
