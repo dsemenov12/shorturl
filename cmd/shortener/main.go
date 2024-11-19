@@ -24,15 +24,15 @@ func run() error {
 	config.ParseFlags()
 	filestorage.Load()
 
-    baseURL, error := url.Parse(config.FlagBaseAddr)
-    if error != nil {
-        return error
+    baseURL, err := url.Parse(config.FlagBaseAddr)
+    if err != nil {
+        return err
     }
     
     router := chi.NewRouter()
 
-	if error = logger.Initialize(config.FlagLogLevel); error != nil {
-        return error
+	if err = logger.Initialize(config.FlagLogLevel); err != nil {
+        return err
     }
 	logger.Log.Info("Running server", zap.String("address", config.FlagRunAddr))
 
@@ -40,9 +40,9 @@ func run() error {
     router.Post("/", logger.RequestLogger(handlers.PostURL))
     router.Get(baseURL.Path + "/{id}", logger.RequestLogger(handlers.Redirect))
 
-	error = http.ListenAndServe(config.FlagRunAddr, gziphandler.GzipHandle(router))
-    if error != nil {
-        return error
+	err = http.ListenAndServe(config.FlagRunAddr, gziphandler.GzipHandle(router))
+    if err != nil {
+        return err
     }
 
 	return nil
