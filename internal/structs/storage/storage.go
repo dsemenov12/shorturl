@@ -9,6 +9,8 @@ type Storage struct {
     Data map[string]string
 }
 
+var StorageObj = Storage{Data: make(map[string]string)}
+
 func (s *Storage) Get(key string) (string, error) {
 	s.mx.Lock()
     defer s.mx.Unlock()
