@@ -4,14 +4,30 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"database/sql"
 
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/dsemenov12/shorturl/internal/config"
 	"github.com/dsemenov12/shorturl/internal/models"
 	"github.com/dsemenov12/shorturl/internal/util"
-	"github.com/dsemenov12/shorturl/internal/filestorage"
+	"github.com/dsemenov12/shorturl/internal/storage/filestorage"
 	"github.com/dsemenov12/shorturl/internal/structs/storage"
 	"github.com/go-chi/chi/v5"
 )
+
+func Ping(res http.ResponseWriter, req *http.Request) {
+	db, err := sql.Open("pgx", config.FlagDatabaseDSN)
+    if err != nil {
+        http.Error(res, "", http.StatusInternalServerError)
+    }
+    defer db.Close()
+
+	if err = db.Ping(); err != nil {
+        http.Error(res, "", http.StatusInternalServerError)
+    }
+
+	res.WriteHeader(http.StatusOK)
+}
 
 func ShortenPost(res http.ResponseWriter, req *http.Request) {
 	var inputDataValue models.InputData

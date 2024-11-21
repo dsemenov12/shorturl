@@ -10,7 +10,7 @@ import (
     "github.com/dsemenov12/shorturl/internal/config"
 	"github.com/dsemenov12/shorturl/internal/logger"
 	"github.com/dsemenov12/shorturl/internal/middlewares/gziphandler"
-	"github.com/dsemenov12/shorturl/internal/filestorage"
+	"github.com/dsemenov12/shorturl/internal/storage/filestorage"
 	"go.uber.org/zap"
 )
 
@@ -36,6 +36,7 @@ func run() error {
     }
 	logger.Log.Info("Running server", zap.String("address", config.FlagRunAddr))
 
+	router.Get("/ping", logger.RequestLogger(handlers.Ping))
 	router.Post("/api/shorten", logger.RequestLogger(handlers.ShortenPost))
     router.Post("/", logger.RequestLogger(handlers.PostURL))
     router.Get(baseURL.Path + "/{id}", logger.RequestLogger(handlers.Redirect))
