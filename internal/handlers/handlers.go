@@ -18,12 +18,12 @@ import (
 func Ping(res http.ResponseWriter, req *http.Request) {
 	db, err := sql.Open("pgx", config.FlagDatabaseDSN)
     if err != nil {
-        http.Error(res, "", http.StatusInternalServerError)
+        http.Error(res, err.Error(), http.StatusInternalServerError)
     }
     defer db.Close()
 
-	if err = db.Ping(); err != nil {
-        http.Error(res, "", http.StatusInternalServerError)
+	if err := db.Ping(); err != nil {
+        http.Error(res, err.Error(), http.StatusInternalServerError)
     }
 
 	res.WriteHeader(http.StatusOK)
