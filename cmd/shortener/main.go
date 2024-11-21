@@ -10,7 +10,7 @@ import (
     "github.com/dsemenov12/shorturl/internal/config"
 	"github.com/dsemenov12/shorturl/internal/logger"
 	"github.com/dsemenov12/shorturl/internal/middlewares/gziphandler"
-	"github.com/dsemenov12/shorturl/internal/storage/filestorage"
+	"github.com/dsemenov12/shorturl/internal/filestorage"
 	"go.uber.org/zap"
 )
 

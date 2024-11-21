@@ -10,7 +10,7 @@ import (
 	"github.com/dsemenov12/shorturl/internal/config"
 	"github.com/dsemenov12/shorturl/internal/models"
 	"github.com/dsemenov12/shorturl/internal/util"
-	"github.com/dsemenov12/shorturl/internal/storage/filestorage"
+	"github.com/dsemenov12/shorturl/internal/filestorage"
 	"github.com/dsemenov12/shorturl/internal/structs/storage"
 	"github.com/go-chi/chi/v5"
 )
