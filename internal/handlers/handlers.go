@@ -61,8 +61,17 @@ func ShortenPost(res http.ResponseWriter, req *http.Request) {
         http.Error(res, err.Error(), http.StatusInternalServerError)
         return
     }
+	db, err := sql.Open("pgx", config.FlagDatabaseDSN)
+	if err == nil {
+		_, err = db.ExecContext(req.Context(), "CREATE TABLE IF NOT EXISTS storage(short_key TEXT, url TEXT)")
+		if err != nil {
+			http.Error(res, err.Error(), http.StatusInternalServerError)
+		}
 
-	filestorage.Save(storage.StorageObj.Data)
+		db.ExecContext(req.Context(), "INSERT INTO storage (short_key, url) VALUES ($1, $2)", shortKey, inputDataValue.URL)
+	} else {
+		filestorage.Save(storage.StorageObj.Data)
+	}
 
 	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusCreated)
@@ -84,8 +93,18 @@ func PostURL(res http.ResponseWriter, req *http.Request) {
 	}
 	defer req.Body.Close()
 
-	storage.StorageObj.Set(shortKey, string(body))
-	filestorage.Save(storage.StorageObj.Data)
+	db, err := sql.Open("pgx", config.FlagDatabaseDSN)
+	if err == nil {
+		_, err = db.ExecContext(req.Context(), "CREATE TABLE IF NOT EXISTS storage(short_key TEXT, url TEXT)")
+		if err != nil {
+			http.Error(res, err.Error(), http.StatusInternalServerError)
+		}
+
+		db.ExecContext(req.Context(), "INSERT INTO storage (short_key, url) VALUES ($1, $2)", shortKey, string(body))
+	} else {
+		storage.StorageObj.Set(shortKey, string(body))
+		filestorage.Save(storage.StorageObj.Data)
+	}
 
 	res.Header().Set("Content-Type", "text/plain")
 	res.WriteHeader(http.StatusCreated)
@@ -94,9 +113,27 @@ func PostURL(res http.ResponseWriter, req *http.Request) {
 
 func Redirect(res http.ResponseWriter, req *http.Request) {
 	shortKey := chi.URLParam(req, "id")
-	redirectLink, err := storage.StorageObj.Get(shortKey)
-	if err != nil {
-		http.Error(res, "redirect not found", 404)
+
+	var redirectLink string
+
+	db, err := sql.Open("pgx", config.FlagDatabaseDSN)
+	if err == nil {
+		_, err = db.ExecContext(req.Context(), "CREATE TABLE IF NOT EXISTS storage(short_key TEXT, url TEXT)")
+		if err != nil {
+			http.Error(res, err.Error(), http.StatusInternalServerError)
+		}
+	
+		row := db.QueryRowContext(req.Context(), "SELECT url FROM storage WHERE short_key=$1", shortKey)
+		
+		err = row.Scan(&redirectLink)
+		if err != nil {
+			http.Error(res, err.Error(), http.StatusNotFound)
+		}
+	} else {
+		redirectLink, err = storage.StorageObj.Get(shortKey)
+		if err != nil {
+			http.Error(res, "redirect not found", 404)
+		}
 	}
 
 	http.Redirect(res, req, redirectLink, http.StatusTemporaryRedirect)
