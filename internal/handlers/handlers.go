@@ -61,8 +61,14 @@ func ShortenPost(res http.ResponseWriter, req *http.Request) {
         http.Error(res, err.Error(), http.StatusInternalServerError)
         return
     }
-	db, err := sql.Open("pgx", config.FlagDatabaseDSN)
-	if err == nil {
+
+	if config.FlagDatabaseDSN != "" {
+		db, err := sql.Open("pgx", config.FlagDatabaseDSN)
+		if err != nil {
+			http.Error(res, err.Error(), http.StatusInternalServerError)
+		}
+		defer db.Close()
+		
 		_, err = db.ExecContext(req.Context(), "CREATE TABLE IF NOT EXISTS storage(short_key TEXT, url TEXT)")
 		if err != nil {
 			http.Error(res, err.Error(), http.StatusInternalServerError)
@@ -93,8 +99,13 @@ func PostURL(res http.ResponseWriter, req *http.Request) {
 	}
 	defer req.Body.Close()
 
-	db, err := sql.Open("pgx", config.FlagDatabaseDSN)
-	if err == nil {
+	if config.FlagDatabaseDSN != "" {
+		db, err := sql.Open("pgx", config.FlagDatabaseDSN)
+		if err != nil {
+			http.Error(res, err.Error(), http.StatusInternalServerError)
+		}
+		defer db.Close()
+
 		_, err = db.ExecContext(req.Context(), "CREATE TABLE IF NOT EXISTS storage(short_key TEXT, url TEXT)")
 		if err != nil {
 			http.Error(res, err.Error(), http.StatusInternalServerError)
@@ -115,9 +126,15 @@ func Redirect(res http.ResponseWriter, req *http.Request) {
 	shortKey := chi.URLParam(req, "id")
 
 	var redirectLink string
+	var err error
 
-	db, err := sql.Open("pgx", config.FlagDatabaseDSN)
-	if err == nil {
+	if config.FlagDatabaseDSN != "" {
+		db, err := sql.Open("pgx", config.FlagDatabaseDSN)
+		if err != nil {
+			http.Error(res, err.Error(), http.StatusInternalServerError)
+		}
+		defer db.Close()
+
 		_, err = db.ExecContext(req.Context(), "CREATE TABLE IF NOT EXISTS storage(short_key TEXT, url TEXT)")
 		if err != nil {
 			http.Error(res, err.Error(), http.StatusInternalServerError)
