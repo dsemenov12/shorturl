@@ -89,12 +89,12 @@ func ShortenBatchPost(res http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 
 	for _, batchItem := range batch {
-		shortURL := config.FlagBaseAddr + "/" + batchItem.CorrelationId
+		shortURL := config.FlagBaseAddr + "/" + batchItem.CorrelationID
 
-		Storage.Insert(req.Context(), batchItem.CorrelationId, batchItem.OriginalURL)
+		Storage.Insert(req.Context(), batchItem.CorrelationID, batchItem.OriginalURL)
 
 		result = append(result, models.BatchResultItem{
-			CorrelationId: batchItem.CorrelationId,
+			CorrelationID: batchItem.CorrelationID,
 			ShortURL: shortURL,
 		})
 	}
