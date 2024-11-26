@@ -4,25 +4,21 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"database/sql"
 
-	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/dsemenov12/shorturl/internal/config"
-	"github.com/dsemenov12/shorturl/internal/models"
-	"github.com/dsemenov12/shorturl/internal/util"
 	"github.com/dsemenov12/shorturl/internal/filestorage"
+	"github.com/dsemenov12/shorturl/internal/models"
+	"github.com/dsemenov12/shorturl/internal/storage/pg"
 	"github.com/dsemenov12/shorturl/internal/structs/storage"
+	"github.com/dsemenov12/shorturl/internal/util"
 	"github.com/go-chi/chi/v5"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-func Ping(res http.ResponseWriter, req *http.Request) {
-	db, err := sql.Open("pgx", config.FlagDatabaseDSN)
-    if err != nil {
-        http.Error(res, err.Error(), http.StatusInternalServerError)
-    }
-    defer db.Close()
+var Storage *pg.Storage
 
-	if err := db.Ping(); err != nil {
+func Ping(res http.ResponseWriter, req *http.Request) {
+	if err := Storage.Ping(); err != nil {
         http.Error(res, err.Error(), http.StatusInternalServerError)
     }
 
@@ -63,21 +59,51 @@ func ShortenPost(res http.ResponseWriter, req *http.Request) {
     }
 
 	if config.FlagDatabaseDSN != "" {
-		db, err := sql.Open("pgx", config.FlagDatabaseDSN)
-		if err != nil {
-			http.Error(res, err.Error(), http.StatusInternalServerError)
-		}
-		defer db.Close()
-		
-		_, err = db.ExecContext(req.Context(), "CREATE TABLE IF NOT EXISTS storage(short_key TEXT, url TEXT)")
-		if err != nil {
-			http.Error(res, err.Error(), http.StatusInternalServerError)
-		}
-
-		db.ExecContext(req.Context(), "INSERT INTO storage (short_key, url) VALUES ($1, $2)", shortKey, inputDataValue.URL)
+		Storage.Insert(req.Context(), shortKey, inputDataValue.URL)
 	} else {
 		filestorage.Save(storage.StorageObj.Data)
 	}
+
+	res.Header().Set("Content-Type", "application/json")
+	res.WriteHeader(http.StatusCreated)
+	res.Write(resp)
+}
+
+func ShortenBatchPost(res http.ResponseWriter, req *http.Request) {
+	var batch []models.BatchItem
+	var result []models.BatchResultItem
+
+	body, err := io.ReadAll(req.Body)
+	if err != nil {
+		http.Error(res, "error", http.StatusBadRequest)
+		return
+	}
+	if string(body) == "" {
+		http.Error(res, "empty body", http.StatusBadRequest)
+		return
+	}
+	if err = json.Unmarshal(body, &batch); err != nil {
+		http.Error(res, err.Error(), http.StatusBadRequest)
+		return
+	}
+	defer req.Body.Close()
+
+	for _, batchItem := range batch {
+		shortURL := config.FlagBaseAddr + "/" + batchItem.CorrelationId
+
+		Storage.Insert(req.Context(), batchItem.CorrelationId, batchItem.OriginalURL)
+
+		result = append(result, models.BatchResultItem{
+			CorrelationId: batchItem.CorrelationId,
+			ShortURL: shortURL,
+		})
+	}
+
+	resp, err := json.MarshalIndent(result, "", "    ")
+    if err != nil {
+        http.Error(res, err.Error(), http.StatusInternalServerError)
+        return
+    }
 
 	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusCreated)
@@ -100,18 +126,7 @@ func PostURL(res http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 
 	if config.FlagDatabaseDSN != "" {
-		db, err := sql.Open("pgx", config.FlagDatabaseDSN)
-		if err != nil {
-			http.Error(res, err.Error(), http.StatusInternalServerError)
-		}
-		defer db.Close()
-
-		_, err = db.ExecContext(req.Context(), "CREATE TABLE IF NOT EXISTS storage(short_key TEXT, url TEXT)")
-		if err != nil {
-			http.Error(res, err.Error(), http.StatusInternalServerError)
-		}
-
-		db.ExecContext(req.Context(), "INSERT INTO storage (short_key, url) VALUES ($1, $2)", shortKey, string(body))
+		Storage.Insert(req.Context(), shortKey, string(body))
 	} else {
 		storage.StorageObj.Set(shortKey, string(body))
 		filestorage.Save(storage.StorageObj.Data)
@@ -129,20 +144,7 @@ func Redirect(res http.ResponseWriter, req *http.Request) {
 	var err error
 
 	if config.FlagDatabaseDSN != "" {
-		db, err := sql.Open("pgx", config.FlagDatabaseDSN)
-		if err != nil {
-			http.Error(res, err.Error(), http.StatusInternalServerError)
-		}
-		defer db.Close()
-
-		_, err = db.ExecContext(req.Context(), "CREATE TABLE IF NOT EXISTS storage(short_key TEXT, url TEXT)")
-		if err != nil {
-			http.Error(res, err.Error(), http.StatusInternalServerError)
-		}
-	
-		row := db.QueryRowContext(req.Context(), "SELECT url FROM storage WHERE short_key=$1", shortKey)
-		
-		err = row.Scan(&redirectLink)
+		redirectLink, err = Storage.Get(req.Context(), shortKey)
 		if err != nil {
 			http.Error(res, err.Error(), http.StatusNotFound)
 		}

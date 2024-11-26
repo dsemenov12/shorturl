@@ -1,16 +1,19 @@
 package main
 
 import (
+	"context"
+	"database/sql"
 	"fmt"
-    "net/http"
-    "net/url"
+	"net/http"
+	"net/url"
 
-    "github.com/go-chi/chi/v5"
-    "github.com/dsemenov12/shorturl/internal/handlers"
-    "github.com/dsemenov12/shorturl/internal/config"
+	"github.com/dsemenov12/shorturl/internal/config"
+	"github.com/dsemenov12/shorturl/internal/filestorage"
+	"github.com/dsemenov12/shorturl/internal/handlers"
 	"github.com/dsemenov12/shorturl/internal/logger"
 	"github.com/dsemenov12/shorturl/internal/middlewares/gziphandler"
-	"github.com/dsemenov12/shorturl/internal/filestorage"
+	"github.com/dsemenov12/shorturl/internal/storage/pg"
+	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 )
 
@@ -28,6 +31,15 @@ func run() error {
     if err != nil {
         return err
     }
+
+	conn, err := sql.Open("pgx", config.FlagDatabaseDSN)
+    if err != nil {
+        return err
+    }
+
+	handlers.Storage = pg.NewStorage(conn)
+
+	handlers.Storage.Bootstrap(context.TODO())
     
     router := chi.NewRouter()
 
@@ -38,6 +50,7 @@ func run() error {
 
 	router.Get("/ping", logger.RequestLogger(handlers.Ping))
 	router.Post("/api/shorten", logger.RequestLogger(handlers.ShortenPost))
+	router.Post("/api/shorten/batch", logger.RequestLogger(handlers.ShortenBatchPost))
     router.Post("/", logger.RequestLogger(handlers.PostURL))
     router.Get(baseURL.Path + "/{id}", logger.RequestLogger(handlers.Redirect))
 
