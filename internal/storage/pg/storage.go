@@ -30,7 +30,7 @@ func (s Storage) Bootstrap(ctx context.Context) error  {
 		tx.Rollback()
 		return err
 	}
-    _, err = tx.ExecContext(ctx, `CREATE UNIQUE INDEX short_key_idx ON storage (short_key)`)
+    _, err = tx.ExecContext(ctx, `CREATE UNIQUE INDEX IF NOT EXISTS short_key_idx ON storage (short_key)`)
 	if err != nil {
 		tx.Rollback()
 		return err
