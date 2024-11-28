@@ -50,10 +50,10 @@ func run() error {
     }
 	logger.Log.Info("Running server", zap.String("address", config.FlagRunAddr))
 
+    router.Post("/", logger.RequestLogger(handlers.PostURL))
 	router.Get("/ping", logger.RequestLogger(handlers.Ping))
 	router.Post("/api/shorten", logger.RequestLogger(handlers.ShortenPost))
 	router.Post("/api/shorten/batch", logger.RequestLogger(handlers.ShortenBatchPost))
-    router.Post("/", logger.RequestLogger(handlers.PostURL))
     router.Get(baseURL.Path + "/{id}", logger.RequestLogger(handlers.Redirect))
 
 	err = http.ListenAndServe(config.FlagRunAddr, gziphandler.GzipHandle(router))
