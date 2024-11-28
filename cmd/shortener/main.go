@@ -39,7 +39,9 @@ func run() error {
 
 	handlers.Storage = pg.NewStorage(conn)
 
-	handlers.Storage.Bootstrap(context.TODO())
+    if err = handlers.Storage.Bootstrap(context.TODO()); err != nil {
+        return err
+    }
     
     router := chi.NewRouter()
 

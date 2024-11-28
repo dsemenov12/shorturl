@@ -13,21 +13,28 @@ func NewStorage(conn *sql.DB) *Storage {
     return &Storage{conn: conn}
 }
 
-func (s Storage) Bootstrap(ctx context.Context) error {
+func (s Storage) Bootstrap(ctx context.Context) error  {
     tx, err := s.conn.BeginTx(ctx, nil)
     if err != nil {
+		tx.Rollback()
         return err
     }
 
-    defer tx.Rollback()
-
-    tx.ExecContext(ctx, `
+    _, err = tx.ExecContext(ctx, `
 		CREATE TABLE IF NOT EXISTS storage(
 			short_key varchar(128),
 			url TEXT
 		)
     `)
-    tx.ExecContext(ctx, `CREATE UNIQUE INDEX short_key_idx ON users (short_key)`)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+    _, err = tx.ExecContext(ctx, `CREATE UNIQUE INDEX short_key_idx ON storage (short_key)`)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
 
     return tx.Commit()
 }
