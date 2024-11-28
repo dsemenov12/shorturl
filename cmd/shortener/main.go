@@ -25,22 +25,25 @@ func main() {
 
 func run() error {
 	config.ParseFlags()
-	filestorage.Load()
-
+	
     baseURL, err := url.Parse(config.FlagBaseAddr)
     if err != nil {
         return err
     }
 
-	conn, err := sql.Open("pgx", config.FlagDatabaseDSN)
-    if err != nil {
-        return err
-    }
+    if config.FlagDatabaseDSN != "" {
+        conn, err := sql.Open("pgx", config.FlagDatabaseDSN)
+        if err != nil {
+            return err
+        }
 
-	handlers.Storage = pg.NewStorage(conn)
+        handlers.Storage = pg.NewStorage(conn)
 
-    if err = handlers.Storage.Bootstrap(context.TODO()); err != nil {
-        return err
+        if err = handlers.Storage.Bootstrap(context.TODO()); err != nil {
+            return err
+        }
+    } else {
+        filestorage.Load()
     }
     
     router := chi.NewRouter()
