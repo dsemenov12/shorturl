@@ -43,8 +43,16 @@ func (s Storage) Ping() error {
     return s.conn.Ping()
 }
 
-func (s Storage) Insert(ctx context.Context, shortKey string, url string) (sql.Result, error) {
-	return s.conn.ExecContext(ctx, "INSERT INTO storage (short_key, url) VALUES ($1, $2)", shortKey, url)
+func (s Storage) Insert(ctx context.Context, shortKey string, url string) (shortKeyResult string, err error) {
+	_, err = s.conn.ExecContext(ctx, "INSERT INTO storage (short_key, url) VALUES ($1, $2)", shortKey, url)
+	if err != nil {
+		row := s.conn.QueryRowContext(ctx, "SELECT short_key FROM storage WHERE url=$1", url)
+		row.Scan(&shortKeyResult)
+	} else {
+		shortKeyResult = shortKey
+	}
+
+	return shortKeyResult, err
 }
 
 func (s Storage) Get(ctx context.Context, shortKey string) (redirectLink string, err error) {

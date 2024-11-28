@@ -30,6 +30,7 @@ func ShortenPost(res http.ResponseWriter, req *http.Request) {
 
 	shortKey := util.RandStringBytes(8)
 	shortURL := config.FlagBaseAddr + "/" + shortKey
+	status := http.StatusCreated
 
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
@@ -46,7 +47,16 @@ func ShortenPost(res http.ResponseWriter, req *http.Request) {
 	}
 	defer req.Body.Close()
 
-	storage.StorageObj.Set(shortKey, inputDataValue.URL)
+	if config.FlagDatabaseDSN != "" {
+		shortKeyResult, err := Storage.Insert(req.Context(), shortKey, inputDataValue.URL)
+		if err != nil {
+			shortURL = config.FlagBaseAddr + "/" + shortKeyResult
+			status = http.StatusConflict
+		}
+	} else {
+		storage.StorageObj.Set(shortKey, inputDataValue.URL)
+		filestorage.Save(storage.StorageObj.Data)
+	}
 
 	var result = models.ResultJSON{
 		Result: shortURL,
@@ -58,23 +68,16 @@ func ShortenPost(res http.ResponseWriter, req *http.Request) {
         return
     }
 
-	if config.FlagDatabaseDSN != "" {
-		_, err = Storage.Insert(req.Context(), shortKey, inputDataValue.URL)
-		if err != nil {
-			http.Error(res, err.Error(), http.StatusConflict)
-		}
-	} else {
-		filestorage.Save(storage.StorageObj.Data)
-	}
-
 	res.Header().Set("Content-Type", "application/json")
-	res.WriteHeader(http.StatusCreated)
+	res.WriteHeader(status)
 	res.Write(resp)
 }
 
 func ShortenBatchPost(res http.ResponseWriter, req *http.Request) {
 	var batch []models.BatchItem
 	var result []models.BatchResultItem
+
+	status := http.StatusCreated
 
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
@@ -94,9 +97,10 @@ func ShortenBatchPost(res http.ResponseWriter, req *http.Request) {
 	for _, batchItem := range batch {
 		shortURL := config.FlagBaseAddr + "/" + batchItem.CorrelationID
 
-		_, err = Storage.Insert(req.Context(), batchItem.CorrelationID, batchItem.OriginalURL)
+		shortKeyResult, err := Storage.Insert(req.Context(), batchItem.CorrelationID, batchItem.OriginalURL)
 		if err != nil {
-			http.Error(res, err.Error(), http.StatusConflict)
+			shortURL = config.FlagBaseAddr + "/" + shortKeyResult
+			status = http.StatusConflict
 		}
 
 		result = append(result, models.BatchResultItem{
@@ -112,13 +116,14 @@ func ShortenBatchPost(res http.ResponseWriter, req *http.Request) {
     }
 
 	res.Header().Set("Content-Type", "application/json")
-	res.WriteHeader(http.StatusCreated)
+	res.WriteHeader(status)
 	res.Write(resp)
 }
 
 func PostURL(res http.ResponseWriter, req *http.Request) {
 	shortKey := util.RandStringBytes(8)
 	shortURL := config.FlagBaseAddr + "/" + shortKey
+	status := http.StatusCreated
 
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
@@ -132,9 +137,10 @@ func PostURL(res http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 
 	if config.FlagDatabaseDSN != "" {
-		_, err = Storage.Insert(req.Context(), shortKey, string(body))
+		shortKeyResult, err := Storage.Insert(req.Context(), shortKey, string(body))
 		if err != nil {
-			http.Error(res, err.Error(), http.StatusConflict)
+			shortURL = config.FlagBaseAddr + "/" + shortKeyResult
+			status = http.StatusConflict
 		}
 	} else {
 		storage.StorageObj.Set(shortKey, string(body))
@@ -142,7 +148,7 @@ func PostURL(res http.ResponseWriter, req *http.Request) {
 	}
 
 	res.Header().Set("Content-Type", "text/plain")
-	res.WriteHeader(http.StatusCreated)
+	res.WriteHeader(status)
 	res.Write([]byte(shortURL))
 }
 
