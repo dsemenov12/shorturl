@@ -59,7 +59,10 @@ func ShortenPost(res http.ResponseWriter, req *http.Request) {
     }
 
 	if config.FlagDatabaseDSN != "" {
-		Storage.Insert(req.Context(), shortKey, inputDataValue.URL)
+		_, err = Storage.Insert(req.Context(), shortKey, inputDataValue.URL)
+		if err != nil {
+			http.Error(res, err.Error(), http.StatusConflict)
+		}
 	} else {
 		filestorage.Save(storage.StorageObj.Data)
 	}
@@ -91,7 +94,10 @@ func ShortenBatchPost(res http.ResponseWriter, req *http.Request) {
 	for _, batchItem := range batch {
 		shortURL := config.FlagBaseAddr + "/" + batchItem.CorrelationID
 
-		Storage.Insert(req.Context(), batchItem.CorrelationID, batchItem.OriginalURL)
+		_, err = Storage.Insert(req.Context(), batchItem.CorrelationID, batchItem.OriginalURL)
+		if err != nil {
+			http.Error(res, err.Error(), http.StatusConflict)
+		}
 
 		result = append(result, models.BatchResultItem{
 			CorrelationID: batchItem.CorrelationID,
@@ -126,7 +132,10 @@ func PostURL(res http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 
 	if config.FlagDatabaseDSN != "" {
-		Storage.Insert(req.Context(), shortKey, string(body))
+		_, err = Storage.Insert(req.Context(), shortKey, string(body))
+		if err != nil {
+			http.Error(res, err.Error(), http.StatusConflict)
+		}
 	} else {
 		storage.StorageObj.Set(shortKey, string(body))
 		filestorage.Save(storage.StorageObj.Data)

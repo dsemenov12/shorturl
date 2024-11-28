@@ -23,7 +23,7 @@ func (s Storage) Bootstrap(ctx context.Context) error  {
     _, err = tx.ExecContext(ctx, `
 		CREATE TABLE IF NOT EXISTS storage(
 			short_key varchar(128),
-			url TEXT
+			url TEXT UNIQUE
 		)
     `)
 	if err != nil {
@@ -43,8 +43,8 @@ func (s Storage) Ping() error {
     return s.conn.Ping()
 }
 
-func (s Storage) Insert(ctx context.Context, shortKey string, url string) {
-	s.conn.ExecContext(ctx, "INSERT INTO storage (short_key, url) VALUES ($1, $2)", shortKey, url)
+func (s Storage) Insert(ctx context.Context, shortKey string, url string) (sql.Result, error) {
+	return s.conn.ExecContext(ctx, "INSERT INTO storage (short_key, url) VALUES ($1, $2)", shortKey, url)
 }
 
 func (s Storage) Get(ctx context.Context, shortKey string) (redirectLink string, err error) {
