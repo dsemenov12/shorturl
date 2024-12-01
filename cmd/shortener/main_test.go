@@ -7,11 +7,109 @@ import (
 	"strings"
 	"io"
 
+	"github.com/golang/mock/gomock"
 	"github.com/dsemenov12/shorturl/internal/structs/storage"
 	"github.com/dsemenov12/shorturl/internal/handlers"
 	"github.com/stretchr/testify/assert"
 	"github.com/dsemenov12/shorturl/internal/config"
+	mock_pg "github.com/dsemenov12/shorturl/internal/storage/mocks"
 )
+
+func TestPing(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	m := mock_pg.NewMockStorage(ctrl)
+
+	type want struct {
+        code int
+    }
+	tests := []struct {
+		name string
+		want want
+	}{
+		{
+            name: "positive test #1",
+            want: want{
+                code: http.StatusOK,
+            },
+        },
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			response := httptest.NewRecorder()
+
+			m.EXPECT().Ping().Do(m.Ping())
+
+			res := response.Result()
+			_, err := io.ReadAll(res.Body)
+			if err != nil {
+				panic(err)
+			}
+			defer res.Body.Close()
+
+			assert.Equal(t, test.want.code, res.StatusCode)
+		})
+	}
+}
+
+func TestShortenBatchPost(t *testing.T) {
+	type want struct {
+        code        int
+        contentType string
+    }
+	tests := []struct {
+		name string
+		body string
+		want want
+	}{
+		{
+            name: "positive test #1",
+			body: `[{"correlation_id": "JJUQVrJ12","original_url": "https://practicum.yandex.ru/"},{"correlation_id": "JJUQVrJ22","original_url": "https://mail.ru/"}]`,
+            want: want{
+                code: http.StatusCreated,
+        		contentType: "application/json",
+            },
+        },
+		{
+            name: "positive test #2",
+			body: `[{"correlation_id": "JJUQVrJ12","original_url": "https://practicum.yandex.ru/123"},{"correlation_id": "JJUQVrJ22","original_url": "https://mail.ru/1234"}]`,
+            want: want{
+                code: http.StatusCreated,
+        		contentType: "application/json",
+            },
+        },
+		{
+            name: "negative test conflict",
+			body: `[{"correlation_id": "JJUQVrJ12","original_url": "https://practicum.yandex.ru/"},{"correlation_id": "JJUQVrJ22","original_url": "https://mail.ru/"}]`,
+            want: want{
+                code: http.StatusConflict,
+        		contentType: "application/json",
+            },
+        },
+		{
+            name: "negative test empty body",
+			body: ``,
+            want: want{
+                code: http.StatusBadRequest,
+        		contentType: "application/json",
+            },
+        },
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			// TODO: дописать тест
+			/*request := httptest.NewRequest(http.MethodPost, "/api/shorten/batch", strings.NewReader(test.body))
+			response := httptest.NewRecorder()
+
+			handlers.ShortenBatchPost(response, request)
+
+			res := response.Result()
+            
+            assert.Equal(t, test.want.code, res.StatusCode)*/
+		})
+	}
+}
 
 func TestShortenPost(t *testing.T) {
 	type want struct {

@@ -37,9 +37,9 @@ func run() error {
             return err
         }
 
-        handlers.Storage = pg.NewStorage(conn)
+        handlers.StorageDB = pg.NewStorage(conn)
 
-        if err = handlers.Storage.Bootstrap(context.TODO()); err != nil {
+        if err = handlers.StorageDB.Bootstrap(context.TODO()); err != nil {
             return err
         }
     } else {

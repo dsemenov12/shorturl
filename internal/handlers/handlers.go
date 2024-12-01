@@ -15,10 +15,10 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-var Storage *pg.Storage
+var StorageDB *pg.StorageDB
 
 func Ping(res http.ResponseWriter, req *http.Request) {
-	if err := Storage.Ping(); err != nil {
+	if err := StorageDB.Ping(); err != nil {
         http.Error(res, err.Error(), http.StatusInternalServerError)
     }
 
@@ -48,7 +48,7 @@ func ShortenPost(res http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 
 	if config.FlagDatabaseDSN != "" {
-		shortKeyResult, err := Storage.Insert(req.Context(), shortKey, inputDataValue.URL)
+		shortKeyResult, err := StorageDB.Insert(req.Context(), shortKey, inputDataValue.URL)
 		if err != nil {
 			shortURL = config.FlagBaseAddr + "/" + shortKeyResult
 			status = http.StatusConflict
@@ -95,9 +95,13 @@ func ShortenBatchPost(res http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 
 	for _, batchItem := range batch {
+		if batchItem.CorrelationID == "" || batchItem.OriginalURL == "" {
+			continue
+		}
+
 		shortURL := config.FlagBaseAddr + "/" + batchItem.CorrelationID
 
-		shortKeyResult, err := Storage.Insert(req.Context(), batchItem.CorrelationID, batchItem.OriginalURL)
+		shortKeyResult, err := StorageDB.Insert(req.Context(), batchItem.CorrelationID, batchItem.OriginalURL)
 		if err != nil {
 			shortURL = config.FlagBaseAddr + "/" + shortKeyResult
 			status = http.StatusConflict
@@ -137,7 +141,7 @@ func PostURL(res http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 
 	if config.FlagDatabaseDSN != "" {
-		shortKeyResult, err := Storage.Insert(req.Context(), shortKey, string(body))
+		shortKeyResult, err := StorageDB.Insert(req.Context(), shortKey, string(body))
 		if err != nil {
 			shortURL = config.FlagBaseAddr + "/" + shortKeyResult
 			status = http.StatusConflict
@@ -159,7 +163,7 @@ func Redirect(res http.ResponseWriter, req *http.Request) {
 	var err error
 
 	if config.FlagDatabaseDSN != "" {
-		redirectLink, err = Storage.Get(req.Context(), shortKey)
+		redirectLink, err = StorageDB.Get(req.Context(), shortKey)
 		if err != nil {
 			http.Error(res, err.Error(), http.StatusNotFound)
 		}
