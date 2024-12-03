@@ -23,9 +23,9 @@ func NewStorage(conn *sql.DB) *StorageDB {
 func (s StorageDB) Bootstrap(ctx context.Context) error  {
     tx, err := s.conn.BeginTx(ctx, nil)
     if err != nil {
-		tx.Rollback()
         return err
     }
+	defer tx.Rollback()
 
     _, err = tx.ExecContext(ctx, `
 		CREATE TABLE IF NOT EXISTS storage(

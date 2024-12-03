@@ -15,17 +15,24 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-var StorageDB *pg.StorageDB
+type app struct {
+    storageDB *pg.StorageDB
+	storage *storage.Storage
+}
 
-func Ping(res http.ResponseWriter, req *http.Request) {
-	if err := StorageDB.Ping(); err != nil {
+func NewApp(storageDB *pg.StorageDB, storage *storage.Storage) *app {
+    return &app{storageDB: storageDB, storage: storage}
+}
+
+func (a *app) Ping(res http.ResponseWriter, req *http.Request) {
+	if err := a.storageDB.Ping(); err != nil {
         http.Error(res, err.Error(), http.StatusInternalServerError)
     }
 
 	res.WriteHeader(http.StatusOK)
 }
 
-func ShortenPost(res http.ResponseWriter, req *http.Request) {
+func (a *app) ShortenPost(res http.ResponseWriter, req *http.Request) {
 	var inputDataValue models.InputData
 
 	shortKey := util.RandStringBytes(8)
@@ -48,14 +55,14 @@ func ShortenPost(res http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 
 	if config.FlagDatabaseDSN != "" {
-		shortKeyResult, err := StorageDB.Insert(req.Context(), shortKey, inputDataValue.URL)
+		shortKeyResult, err := a.storageDB.Insert(req.Context(), shortKey, inputDataValue.URL)
 		if err != nil {
 			shortURL = config.FlagBaseAddr + "/" + shortKeyResult
 			status = http.StatusConflict
 		}
 	} else {
-		storage.StorageObj.Set(shortKey, inputDataValue.URL)
-		filestorage.Save(storage.StorageObj.Data)
+		a.storage.Set(shortKey, inputDataValue.URL)
+		filestorage.Save(a.storage.Data)
 	}
 
 	var result = models.ResultJSON{
@@ -73,7 +80,7 @@ func ShortenPost(res http.ResponseWriter, req *http.Request) {
 	res.Write(resp)
 }
 
-func ShortenBatchPost(res http.ResponseWriter, req *http.Request) {
+func (a *app) ShortenBatchPost(res http.ResponseWriter, req *http.Request) {
 	var batch []models.BatchItem
 	var result []models.BatchResultItem
 
@@ -101,7 +108,7 @@ func ShortenBatchPost(res http.ResponseWriter, req *http.Request) {
 
 		shortURL := config.FlagBaseAddr + "/" + batchItem.CorrelationID
 
-		shortKeyResult, err := StorageDB.Insert(req.Context(), batchItem.CorrelationID, batchItem.OriginalURL)
+		shortKeyResult, err := a.storageDB.Insert(req.Context(), batchItem.CorrelationID, batchItem.OriginalURL)
 		if err != nil {
 			shortURL = config.FlagBaseAddr + "/" + shortKeyResult
 			status = http.StatusConflict
@@ -124,7 +131,7 @@ func ShortenBatchPost(res http.ResponseWriter, req *http.Request) {
 	res.Write(resp)
 }
 
-func PostURL(res http.ResponseWriter, req *http.Request) {
+func (a *app) PostURL(res http.ResponseWriter, req *http.Request) {
 	shortKey := util.RandStringBytes(8)
 	shortURL := config.FlagBaseAddr + "/" + shortKey
 	status := http.StatusCreated
@@ -141,14 +148,14 @@ func PostURL(res http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 
 	if config.FlagDatabaseDSN != "" {
-		shortKeyResult, err := StorageDB.Insert(req.Context(), shortKey, string(body))
+		shortKeyResult, err := a.storageDB.Insert(req.Context(), shortKey, string(body))
 		if err != nil {
 			shortURL = config.FlagBaseAddr + "/" + shortKeyResult
 			status = http.StatusConflict
 		}
 	} else {
-		storage.StorageObj.Set(shortKey, string(body))
-		filestorage.Save(storage.StorageObj.Data)
+		a.storage.Set(shortKey, string(body))
+		filestorage.Save(a.storage.Data)
 	}
 
 	res.Header().Set("Content-Type", "text/plain")
@@ -156,19 +163,19 @@ func PostURL(res http.ResponseWriter, req *http.Request) {
 	res.Write([]byte(shortURL))
 }
 
-func Redirect(res http.ResponseWriter, req *http.Request) {
+func (a *app) Redirect(res http.ResponseWriter, req *http.Request) {
 	shortKey := chi.URLParam(req, "id")
 
 	var redirectLink string
 	var err error
 
 	if config.FlagDatabaseDSN != "" {
-		redirectLink, err = StorageDB.Get(req.Context(), shortKey)
+		redirectLink, err = a.storageDB.Get(req.Context(), shortKey)
 		if err != nil {
 			http.Error(res, err.Error(), http.StatusNotFound)
 		}
 	} else {
-		redirectLink, err = storage.StorageObj.Get(shortKey)
+		redirectLink, err = a.storage.Get(shortKey)
 		if err != nil {
 			http.Error(res, "redirect not found", 404)
 		}

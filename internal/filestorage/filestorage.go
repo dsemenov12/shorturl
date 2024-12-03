@@ -4,10 +4,8 @@ import (
 	"os"
 	"encoding/json"
 	"strconv"
-	"bufio"
 
 	"github.com/dsemenov12/shorturl/internal/config"
-	"github.com/dsemenov12/shorturl/internal/structs/storage"
 )
 
 type ShortURLJSON struct {
@@ -44,25 +42,4 @@ func Save(storageData map[string]string) error {
 
 	_, err = file.Write(data)
     return err
-}
-
-func Load() error {
-	var shortURLJSON *ShortURLJSON
-
-	file, err := os.OpenFile(config.FlagFileStoragePath, os.O_RDONLY, 0666)
-    if err != nil {
-        return err
-    }
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		if err = json.Unmarshal(scanner.Bytes(), &shortURLJSON); err != nil {
-			return err
-		}
-
-		storage.StorageObj.Set(shortURLJSON.ShortURL, shortURLJSON.OriginalURL)
-	}
-
-	return nil
 }
