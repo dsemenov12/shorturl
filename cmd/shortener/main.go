@@ -8,7 +8,6 @@ import (
 	"net/url"
 
 	"github.com/dsemenov12/shorturl/internal/config"
-	"github.com/dsemenov12/shorturl/internal/filestorage"
 	"github.com/dsemenov12/shorturl/internal/handlers"
 	"github.com/dsemenov12/shorturl/internal/logger"
 	"github.com/dsemenov12/shorturl/internal/middlewares/gziphandler"
