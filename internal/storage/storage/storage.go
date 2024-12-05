@@ -5,34 +5,41 @@ import (
 	"os"
 	"bufio"
 	"encoding/json"
+	"context"
 
 	"github.com/dsemenov12/shorturl/internal/filestorage"
 	"github.com/dsemenov12/shorturl/internal/config"
 )
 
-type Storage struct {
+type StorageMemory struct {
 	mx sync.Mutex
     Data map[string]string
 }
 
-func NewStorage() *Storage {
-	StorageObj := Storage{Data: make(map[string]string)}
+func NewStorage() *StorageMemory {
+	StorageObj := StorageMemory{Data: make(map[string]string)}
     return &StorageObj
 }
 
-func (s *Storage) Get(key string) (string, error) {
+func (s StorageMemory) Ping() error {
+    return nil
+}
+
+func (s *StorageMemory) Get(ctx context.Context, key string) (string, error) {
 	s.mx.Lock()
     defer s.mx.Unlock()
     return s.Data[key], nil
 }
 
-func (s *Storage) Set(key string, value string) {
+func (s *StorageMemory) Set(ctx context.Context, key string, value string) (string, error) {
 	s.mx.Lock()
     defer s.mx.Unlock()
 	s.Data[key] = value
+
+	return value, nil
 }
 
-func (s *Storage) Load() error {
+func (s *StorageMemory) Bootstrap(ctx context.Context) error {
 	var shortURLJSON *filestorage.ShortURLJSON
 
 	file, err := os.OpenFile(config.FlagFileStoragePath, os.O_RDONLY, 0666)
@@ -47,7 +54,7 @@ func (s *Storage) Load() error {
 			return err
 		}
 
-		s.Set(shortURLJSON.ShortURL, shortURLJSON.OriginalURL)
+		s.Set(ctx, shortURLJSON.ShortURL, shortURLJSON.OriginalURL)
 	}
 
 	return nil

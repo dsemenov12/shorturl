@@ -4,28 +4,37 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"context"
 
 	"github.com/dsemenov12/shorturl/internal/config"
 	"github.com/dsemenov12/shorturl/internal/filestorage"
 	"github.com/dsemenov12/shorturl/internal/models"
-	"github.com/dsemenov12/shorturl/internal/storage/pg"
-	"github.com/dsemenov12/shorturl/internal/structs/storage"
 	"github.com/dsemenov12/shorturl/internal/util"
 	"github.com/go-chi/chi/v5"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-type app struct {
-    storageDB *pg.StorageDB
-	storage *storage.Storage
+type Storage interface {
+	Bootstrap(ctx context.Context) error
+	Ping() error
+	Set(ctx context.Context, shortKey string, url string) (string, error)
+	Get(ctx context.Context, shortKey string) (string, error)
 }
 
-func NewApp(storageDB *pg.StorageDB, storage *storage.Storage) *app {
-    return &app{storageDB: storageDB, storage: storage}
+type dataToFile struct {
+    Data map[string]string
+}
+
+type app struct {
+	storage Storage
+}
+
+func NewApp(storage Storage) *app {
+    return &app{storage: storage}
 }
 
 func (a *app) Ping(res http.ResponseWriter, req *http.Request) {
-	if err := a.storageDB.Ping(); err != nil {
+	if err := a.storage.Ping(); err != nil {
         http.Error(res, err.Error(), http.StatusInternalServerError)
     }
 
@@ -54,16 +63,15 @@ func (a *app) ShortenPost(res http.ResponseWriter, req *http.Request) {
 	}
 	defer req.Body.Close()
 
-	if config.FlagDatabaseDSN != "" {
-		shortKeyResult, err := a.storageDB.Insert(req.Context(), shortKey, inputDataValue.URL)
-		if err != nil {
-			shortURL = config.FlagBaseAddr + "/" + shortKeyResult
-			status = http.StatusConflict
-		}
-	} else {
-		a.storage.Set(shortKey, inputDataValue.URL)
-		filestorage.Save(a.storage.Data)
+	shortKeyResult, err := a.storage.Set(req.Context(), shortKey, inputDataValue.URL)
+	if err != nil {
+		shortURL = config.FlagBaseAddr + "/" + shortKeyResult
+		status = http.StatusConflict
 	}
+
+	data := dataToFile{Data: make(map[string]string)}
+	data.Data[shortKey] = inputDataValue.URL
+	filestorage.Save(data.Data)
 
 	var result = models.ResultJSON{
 		Result: shortURL,
@@ -108,7 +116,7 @@ func (a *app) ShortenBatchPost(res http.ResponseWriter, req *http.Request) {
 
 		shortURL := config.FlagBaseAddr + "/" + batchItem.CorrelationID
 
-		shortKeyResult, err := a.storageDB.Insert(req.Context(), batchItem.CorrelationID, batchItem.OriginalURL)
+		shortKeyResult, err := a.storage.Set(req.Context(), batchItem.CorrelationID, batchItem.OriginalURL)
 		if err != nil {
 			shortURL = config.FlagBaseAddr + "/" + shortKeyResult
 			status = http.StatusConflict
@@ -147,16 +155,15 @@ func (a *app) PostURL(res http.ResponseWriter, req *http.Request) {
 	}
 	defer req.Body.Close()
 
-	if config.FlagDatabaseDSN != "" {
-		shortKeyResult, err := a.storageDB.Insert(req.Context(), shortKey, string(body))
-		if err != nil {
-			shortURL = config.FlagBaseAddr + "/" + shortKeyResult
-			status = http.StatusConflict
-		}
-	} else {
-		a.storage.Set(shortKey, string(body))
-		filestorage.Save(a.storage.Data)
+	shortKeyResult, err := a.storage.Set(req.Context(), shortKey, string(body))
+	if err != nil {
+		shortURL = config.FlagBaseAddr + "/" + shortKeyResult
+		status = http.StatusConflict
 	}
+
+	data := dataToFile{Data: make(map[string]string)}
+	data.Data[shortKey] = string(body)
+	filestorage.Save(data.Data)
 
 	res.Header().Set("Content-Type", "text/plain")
 	res.WriteHeader(status)
@@ -169,16 +176,9 @@ func (a *app) Redirect(res http.ResponseWriter, req *http.Request) {
 	var redirectLink string
 	var err error
 
-	if config.FlagDatabaseDSN != "" {
-		redirectLink, err = a.storageDB.Get(req.Context(), shortKey)
-		if err != nil {
-			http.Error(res, err.Error(), http.StatusNotFound)
-		}
-	} else {
-		redirectLink, err = a.storage.Get(shortKey)
-		if err != nil {
-			http.Error(res, "redirect not found", 404)
-		}
+	redirectLink, err = a.storage.Get(req.Context(), shortKey)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusNotFound)
 	}
 
 	http.Redirect(res, req, redirectLink, http.StatusTemporaryRedirect)

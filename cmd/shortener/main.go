@@ -12,7 +12,7 @@ import (
 	"github.com/dsemenov12/shorturl/internal/logger"
 	"github.com/dsemenov12/shorturl/internal/middlewares/gziphandler"
 	"github.com/dsemenov12/shorturl/internal/storage/pg"
-	"github.com/dsemenov12/shorturl/internal/structs/storage"
+	storageMemory "github.com/dsemenov12/shorturl/internal/storage/storage"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 )
@@ -24,7 +24,7 @@ func main() {
 }
 
 func run() error {
-	var storageDB *pg.StorageDB
+	var storage handlers.Storage
 
 	config.ParseFlags()
 	
@@ -33,22 +33,21 @@ func run() error {
         return err
     }
 
-	storage := storage.NewStorage()
+	storage = storageMemory.NewStorage()
     if config.FlagDatabaseDSN != "" {
 		conn, err := sql.Open("pgx", config.FlagDatabaseDSN)
 		if err != nil {
 			return err
 		}
 
-		storageDB = pg.NewStorage(conn)
-		if err = storageDB.Bootstrap(context.TODO()); err != nil {
-            return err
-        }
-    } else {
-        storage.Load()
+		storage = pg.NewStorage(conn)
     }
 
-	app := handlers.NewApp(storageDB, storage)
+	if err = storage.Bootstrap(context.TODO()); err != nil {
+		return err
+	}
+
+	app := handlers.NewApp(storage)
     
     router := chi.NewRouter()
 
