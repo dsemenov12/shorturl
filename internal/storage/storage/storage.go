@@ -22,6 +22,8 @@ func NewStorage() *StorageMemory {
 }
 
 func (s StorageMemory) Ping() error {
+	s.mx.Lock()
+    defer s.mx.Unlock()
     return nil
 }
 
