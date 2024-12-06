@@ -6,18 +6,32 @@ import (
 	"net/http"
 
 	"github.com/dsemenov12/shorturl/internal/config"
+	"github.com/dsemenov12/shorturl/internal/filestorage"
+	"github.com/dsemenov12/shorturl/internal/storage/mainstorage"
 	"github.com/dsemenov12/shorturl/internal/models"
 	"github.com/dsemenov12/shorturl/internal/util"
-	"github.com/dsemenov12/shorturl/internal/filestorage"
-	"github.com/dsemenov12/shorturl/internal/structs/storage"
 	"github.com/go-chi/chi/v5"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-func ShortenPost(res http.ResponseWriter, req *http.Request) {
+type dataToFile struct {
+    Data map[string]string
+}
+
+type app struct {
+	storage mainstorage.Storage
+}
+
+func NewApp(storage mainstorage.Storage) *app {
+    return &app{storage: storage}
+}
+
+func (a *app) ShortenPost(res http.ResponseWriter, req *http.Request) {
 	var inputDataValue models.InputData
 
 	shortKey := util.RandStringBytes(8)
 	shortURL := config.FlagBaseAddr + "/" + shortKey
+	status := http.StatusCreated
 
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
@@ -34,7 +48,16 @@ func ShortenPost(res http.ResponseWriter, req *http.Request) {
 	}
 	defer req.Body.Close()
 
-	storage.StorageObj.Set(shortKey, inputDataValue.URL)
+	shortKeyResult, err := a.storage.Set(req.Context(), shortKey, inputDataValue.URL)
+	if err != nil {
+		shortURL = config.FlagBaseAddr + "/" + shortKeyResult
+		status = http.StatusConflict
+	}
+
+	storageData := make(map[string]string)
+	storageData[shortKey] = inputDataValue.URL
+
+	filestorage.Save(storageData)
 
 	var result = models.ResultJSON{
 		Result: shortURL,
@@ -46,16 +69,66 @@ func ShortenPost(res http.ResponseWriter, req *http.Request) {
         return
     }
 
-	filestorage.Save(storage.StorageObj.Data)
-
 	res.Header().Set("Content-Type", "application/json")
-	res.WriteHeader(http.StatusCreated)
+	res.WriteHeader(status)
 	res.Write(resp)
 }
 
-func PostURL(res http.ResponseWriter, req *http.Request) {
+func (a *app) ShortenBatchPost(res http.ResponseWriter, req *http.Request) {
+	var batch []models.BatchItem
+	var result []models.BatchResultItem
+
+	status := http.StatusCreated
+
+	body, err := io.ReadAll(req.Body)
+	if err != nil {
+		http.Error(res, "error", http.StatusBadRequest)
+		return
+	}
+	if string(body) == "" {
+		http.Error(res, "empty body", http.StatusBadRequest)
+		return
+	}
+	if err = json.Unmarshal(body, &batch); err != nil {
+		http.Error(res, err.Error(), http.StatusBadRequest)
+		return
+	}
+	defer req.Body.Close()
+
+	for _, batchItem := range batch {
+		if batchItem.CorrelationID == "" || batchItem.OriginalURL == "" {
+			continue
+		}
+
+		shortURL := config.FlagBaseAddr + "/" + batchItem.CorrelationID
+
+		shortKeyResult, err := a.storage.Set(req.Context(), batchItem.CorrelationID, batchItem.OriginalURL)
+		if err != nil {
+			shortURL = config.FlagBaseAddr + "/" + shortKeyResult
+			status = http.StatusConflict
+		}
+
+		result = append(result, models.BatchResultItem{
+			CorrelationID: batchItem.CorrelationID,
+			ShortURL: shortURL,
+		})
+	}
+
+	resp, err := json.MarshalIndent(result, "", "    ")
+    if err != nil {
+        http.Error(res, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+	res.Header().Set("Content-Type", "application/json")
+	res.WriteHeader(status)
+	res.Write(resp)
+}
+
+func (a *app) PostURL(res http.ResponseWriter, req *http.Request) {
 	shortKey := util.RandStringBytes(8)
 	shortURL := config.FlagBaseAddr + "/" + shortKey
+	status := http.StatusCreated
 
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
@@ -68,19 +141,30 @@ func PostURL(res http.ResponseWriter, req *http.Request) {
 	}
 	defer req.Body.Close()
 
-	storage.StorageObj.Set(shortKey, string(body))
-	filestorage.Save(storage.StorageObj.Data)
+	shortKeyResult, err := a.storage.Set(req.Context(), shortKey, string(body))
+	if err != nil {
+		shortURL = config.FlagBaseAddr + "/" + shortKeyResult
+		status = http.StatusConflict
+	}
+
+	data := dataToFile{Data: make(map[string]string)}
+	data.Data[shortKey] = string(body)
+	filestorage.Save(data.Data)
 
 	res.Header().Set("Content-Type", "text/plain")
-	res.WriteHeader(http.StatusCreated)
+	res.WriteHeader(status)
 	res.Write([]byte(shortURL))
 }
 
-func Redirect(res http.ResponseWriter, req *http.Request) {
+func (a *app) Redirect(res http.ResponseWriter, req *http.Request) {
 	shortKey := chi.URLParam(req, "id")
-	redirectLink, err := storage.StorageObj.Get(shortKey)
+
+	var redirectLink string
+	var err error
+
+	redirectLink, err = a.storage.Get(req.Context(), shortKey)
 	if err != nil {
-		http.Error(res, "redirect not found", 404)
+		http.Error(res, err.Error(), http.StatusNotFound)
 	}
 
 	http.Redirect(res, req, redirectLink, http.StatusTemporaryRedirect)

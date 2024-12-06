@@ -1,13 +1,14 @@
 package filestorage
 
 import (
-	"os"
-	"encoding/json"
-	"strconv"
 	"bufio"
+	"context"
+	"encoding/json"
+	"os"
+	"strconv"
 
 	"github.com/dsemenov12/shorturl/internal/config"
-	"github.com/dsemenov12/shorturl/internal/structs/storage"
+	"github.com/dsemenov12/shorturl/internal/storage/mainstorage"
 )
 
 type ShortURLJSON struct {
@@ -46,7 +47,7 @@ func Save(storageData map[string]string) error {
     return err
 }
 
-func Load() error {
+func Load(storage mainstorage.Storage) error {
 	var shortURLJSON *ShortURLJSON
 
 	file, err := os.OpenFile(config.FlagFileStoragePath, os.O_RDONLY, 0666)
@@ -61,7 +62,7 @@ func Load() error {
 			return err
 		}
 
-		storage.StorageObj.Set(shortURLJSON.ShortURL, shortURLJSON.OriginalURL)
+		storage.Set(context.TODO(), shortURLJSON.ShortURL, shortURLJSON.OriginalURL)
 	}
 
 	return nil
