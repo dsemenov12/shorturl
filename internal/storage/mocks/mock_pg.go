@@ -64,7 +64,7 @@ func (mr *MockStorageMockRecorder) Get(ctx, shortKey interface{}) *gomock.Call {
 }
 
 // Insert mocks base method.
-func (m *MockStorage) Insert(ctx context.Context, shortKey, url string) (string, error) {
+func (m *MockStorage) Set(ctx context.Context, shortKey, url string) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Insert", ctx, shortKey, url)
 	ret0, _ := ret[0].(string)
@@ -73,21 +73,7 @@ func (m *MockStorage) Insert(ctx context.Context, shortKey, url string) (string,
 }
 
 // Insert indicates an expected call of Insert.
-func (mr *MockStorageMockRecorder) Insert(ctx, shortKey, url interface{}) *gomock.Call {
+func (mr *MockStorageMockRecorder) Set(ctx, shortKey, url interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Insert", reflect.TypeOf((*MockStorage)(nil).Insert), ctx, shortKey, url)
-}
-
-// Ping mocks base method.
-func (m *MockStorage) Ping() error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Ping")
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Ping indicates an expected call of Ping.
-func (mr *MockStorageMockRecorder) Ping() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Ping", reflect.TypeOf((*MockStorage)(nil).Ping))
 }

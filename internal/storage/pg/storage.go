@@ -39,10 +39,6 @@ func (s StorageDB) Bootstrap(ctx context.Context) error  {
     return tx.Commit()
 }
 
-func (s StorageDB) Ping() error {
-    return s.conn.Ping()
-}
-
 func (s StorageDB) Set(ctx context.Context, shortKey string, url string) (shortKeyResult string, err error) {
 	_, err = s.conn.ExecContext(ctx, "INSERT INTO storage (short_key, url) VALUES ($1, $2)", shortKey, url)
 	if err != nil {

@@ -21,12 +21,6 @@ func NewStorage() *StorageMemory {
     return &StorageObj
 }
 
-func (s StorageMemory) Ping() error {
-	s.mx.Lock()
-    defer s.mx.Unlock()
-    return nil
-}
-
 func (s *StorageMemory) Get(ctx context.Context, key string) (string, error) {
 	s.mx.Lock()
     defer s.mx.Unlock()

@@ -1,10 +1,10 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
-	"context"
 
 	"github.com/dsemenov12/shorturl/internal/config"
 	"github.com/dsemenov12/shorturl/internal/filestorage"
@@ -16,7 +16,6 @@ import (
 
 type Storage interface {
 	Bootstrap(ctx context.Context) error
-	Ping() error
 	Set(ctx context.Context, shortKey string, url string) (string, error)
 	Get(ctx context.Context, shortKey string) (string, error)
 }
@@ -31,14 +30,6 @@ type app struct {
 
 func NewApp(storage Storage) *app {
     return &app{storage: storage}
-}
-
-func (a *app) Ping(res http.ResponseWriter, req *http.Request) {
-	if err := a.storage.Ping(); err != nil {
-        http.Error(res, err.Error(), http.StatusInternalServerError)
-    }
-
-	res.WriteHeader(http.StatusOK)
 }
 
 func (a *app) ShortenPost(res http.ResponseWriter, req *http.Request) {

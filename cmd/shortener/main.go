@@ -33,12 +33,22 @@ func run() error {
         return err
     }
 
+	router := chi.NewRouter()
+
 	storage = storageMemory.NewStorage()
     if config.FlagDatabaseDSN != "" {
 		conn, err := sql.Open("pgx", config.FlagDatabaseDSN)
 		if err != nil {
 			return err
 		}
+
+		router.Get("/ping", logger.RequestLogger(func (res http.ResponseWriter, req *http.Request) {
+			if err := conn.Ping(); err != nil {
+				http.Error(res, err.Error(), http.StatusInternalServerError)
+			}
+		
+			res.WriteHeader(http.StatusOK)
+		}))
 
 		storage = pg.NewStorage(conn)
     }
@@ -48,8 +58,6 @@ func run() error {
 	}
 
 	app := handlers.NewApp(storage)
-    
-    router := chi.NewRouter()
 
 	if err = logger.Initialize(config.FlagLogLevel); err != nil {
         return err
@@ -57,7 +65,6 @@ func run() error {
 	logger.Log.Info("Running server", zap.String("address", config.FlagRunAddr))
 
     router.Post("/", logger.RequestLogger(app.PostURL))
-	router.Get("/ping", logger.RequestLogger(app.Ping))
 	router.Post("/api/shorten", logger.RequestLogger(app.ShortenPost))
 	router.Post("/api/shorten/batch", logger.RequestLogger(app.ShortenBatchPost))
     router.Get(baseURL.Path + "/{id}", logger.RequestLogger(app.Redirect))
