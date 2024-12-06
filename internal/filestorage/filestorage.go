@@ -1,11 +1,14 @@
 package filestorage
 
 import (
-	"os"
+	"bufio"
+	"context"
 	"encoding/json"
+	"os"
 	"strconv"
 
 	"github.com/dsemenov12/shorturl/internal/config"
+	"github.com/dsemenov12/shorturl/internal/storage/storage_main"
 )
 
 type ShortURLJSON struct {
@@ -42,4 +45,25 @@ func Save(storageData map[string]string) error {
 
 	_, err = file.Write(data)
     return err
+}
+
+func Load(storage storage_main.Storage) error {
+	var shortURLJSON *ShortURLJSON
+
+	file, err := os.OpenFile(config.FlagFileStoragePath, os.O_RDONLY, 0666)
+    if err != nil {
+        return err
+    }
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		if err = json.Unmarshal(scanner.Bytes(), &shortURLJSON); err != nil {
+			return err
+		}
+
+		storage.Set(context.TODO(), shortURLJSON.ShortURL, shortURLJSON.OriginalURL)
+	}
+
+	return nil
 }

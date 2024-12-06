@@ -1,34 +1,28 @@
 package handlers
 
 import (
-	"context"
 	"encoding/json"
 	"io"
 	"net/http"
 
 	"github.com/dsemenov12/shorturl/internal/config"
 	"github.com/dsemenov12/shorturl/internal/filestorage"
+	"github.com/dsemenov12/shorturl/internal/storage/storage_main"
 	"github.com/dsemenov12/shorturl/internal/models"
 	"github.com/dsemenov12/shorturl/internal/util"
 	"github.com/go-chi/chi/v5"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-type Storage interface {
-	Bootstrap(ctx context.Context) error
-	Set(ctx context.Context, shortKey string, url string) (string, error)
-	Get(ctx context.Context, shortKey string) (string, error)
-}
-
 type dataToFile struct {
     Data map[string]string
 }
 
 type app struct {
-	storage Storage
+	storage storage_main.Storage
 }
 
-func NewApp(storage Storage) *app {
+func NewApp(storage storage_main.Storage) *app {
     return &app{storage: storage}
 }
 
@@ -60,9 +54,10 @@ func (a *app) ShortenPost(res http.ResponseWriter, req *http.Request) {
 		status = http.StatusConflict
 	}
 
-	data := dataToFile{Data: make(map[string]string)}
-	data.Data[shortKey] = inputDataValue.URL
-	filestorage.Save(data.Data)
+	storageData := make(map[string]string)
+	storageData[shortKey] = inputDataValue.URL
+
+	filestorage.Save(storageData)
 
 	var result = models.ResultJSON{
 		Result: shortURL,
