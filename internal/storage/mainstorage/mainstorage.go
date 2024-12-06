@@ -1,4 +1,4 @@
-package storage_main
+package mainstorage
 
 import "context"
 

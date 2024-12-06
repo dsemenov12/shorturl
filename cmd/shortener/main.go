@@ -13,7 +13,7 @@ import (
 	"github.com/dsemenov12/shorturl/internal/middlewares/gziphandler"
 	"github.com/dsemenov12/shorturl/internal/storage/pg"
 	storageMemory "github.com/dsemenov12/shorturl/internal/storage/storage"
-	"github.com/dsemenov12/shorturl/internal/storage/storage_main"
+	"github.com/dsemenov12/shorturl/internal/storage/mainstorage"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 )
@@ -25,7 +25,7 @@ func main() {
 }
 
 func run() error {
-	var storage storage_main.Storage
+	var storage mainstorage.Storage
 
 	config.ParseFlags()
 	
