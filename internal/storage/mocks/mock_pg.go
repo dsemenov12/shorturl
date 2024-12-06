@@ -63,17 +63,17 @@ func (mr *MockStorageMockRecorder) Get(ctx, shortKey interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockStorage)(nil).Get), ctx, shortKey)
 }
 
-// Insert mocks base method.
+// Set mocks base method.
 func (m *MockStorage) Set(ctx context.Context, shortKey, url string) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Insert", ctx, shortKey, url)
+	ret := m.ctrl.Call(m, "Set", ctx, shortKey, url)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// Insert indicates an expected call of Insert.
+// Set indicates an expected call of Set.
 func (mr *MockStorageMockRecorder) Set(ctx, shortKey, url interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Insert", reflect.TypeOf((*MockStorage)(nil).Insert), ctx, shortKey, url)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Set", reflect.TypeOf((*MockStorage)(nil).Set), ctx, shortKey, url)
 }
