@@ -7,7 +7,7 @@ import (
 
 	"github.com/dsemenov12/shorturl/internal/config"
 	"github.com/dsemenov12/shorturl/internal/filestorage"
-	"github.com/dsemenov12/shorturl/internal/storage/mainstorage"
+	"github.com/dsemenov12/shorturl/internal/storage"
 	"github.com/dsemenov12/shorturl/internal/models"
 	"github.com/dsemenov12/shorturl/internal/util"
 	"github.com/go-chi/chi/v5"
@@ -19,10 +19,10 @@ type dataToFile struct {
 }
 
 type app struct {
-	storage mainstorage.Storage
+	storage storage.Storage
 }
 
-func NewApp(storage mainstorage.Storage) *app {
+func NewApp(storage storage.Storage) *app {
     return &app{storage: storage}
 }
 
