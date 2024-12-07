@@ -8,7 +8,7 @@ import (
 	"strconv"
 
 	"github.com/dsemenov12/shorturl/internal/config"
-	"github.com/dsemenov12/shorturl/internal/storage/mainstorage"
+	"github.com/dsemenov12/shorturl/internal/storage"
 )
 
 type ShortURLJSON struct {
@@ -47,7 +47,7 @@ func Save(storageData map[string]string) error {
     return err
 }
 
-func Load(storage mainstorage.Storage) error {
+func Load(storage storage.Storage) error {
 	var shortURLJSON *ShortURLJSON
 
 	file, err := os.OpenFile(config.FlagFileStoragePath, os.O_RDONLY, 0666)

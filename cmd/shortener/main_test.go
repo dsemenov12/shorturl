@@ -9,7 +9,7 @@ import (
 	"context"
 
 	//"github.com/golang/mock/gomock"
-	storageMemory "github.com/dsemenov12/shorturl/internal/storage/storage"
+	"github.com/dsemenov12/shorturl/internal/storage/memory"
 	//"github.com/dsemenov12/shorturl/internal/handlers"
 	//"github.com/stretchr/testify/assert"
 	//"github.com/dsemenov12/shorturl/internal/config"
@@ -216,7 +216,7 @@ func TestPostURL(t *testing.T) {
 }
 
 func TestRedirect(t *testing.T) {
-	var storageObj = storageMemory.StorageMemory{Data: make(map[string]string)}
+	var storageObj = memory.StorageMemory{Data: make(map[string]string)}
 
 	storageObj.Set(context.TODO() ,"bmXrsnZk", "https://practicum.yandex.ru/profile/go-advanced/")
 	storageObj.Set(context.TODO() ,"NVbvbWXj", "https://practicum.yandex.ru/")
