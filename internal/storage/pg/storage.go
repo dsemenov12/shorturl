@@ -58,6 +58,6 @@ func (s StorageDB) Get(ctx context.Context, shortKey string) (redirectLink strin
 	return
 }
 
-func (s StorageDB) GetUserUrl(ctx context.Context) (rows *sql.Rows, err error) {
+func (s StorageDB) GetUserURL(ctx context.Context) (rows *sql.Rows, err error) {
     return s.conn.QueryContext(ctx, "SELECT short_key, url FROM storage WHERE user_id=$1", ctx.Value("user_id"));
 }

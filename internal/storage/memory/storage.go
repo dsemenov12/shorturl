@@ -37,6 +37,6 @@ func (s *StorageMemory) Bootstrap(ctx context.Context) error {
 	return nil
 }
 
-func (s *StorageMemory) GetUserUrl(ctx context.Context) (rows *sql.Rows, err error) {
+func (s *StorageMemory) GetUserURL(ctx context.Context) (rows *sql.Rows, err error) {
     return nil, nil
 }

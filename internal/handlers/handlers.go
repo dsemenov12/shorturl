@@ -173,9 +173,9 @@ func (a *app) Redirect(res http.ResponseWriter, req *http.Request) {
 func (a *app) UserUrls(res http.ResponseWriter, req *http.Request) {
 	var result []models.ShortUrlItem
 	var shortKey string
-	var originalUrl string
+	var originalURL string
 
-	rows, err := a.storage.GetUserUrl(req.Context())
+	rows, err := a.storage.GetUserURL(req.Context())
 	if err != nil {
         http.Error(res, err.Error(), http.StatusNoContent)
 		return
@@ -184,13 +184,13 @@ func (a *app) UserUrls(res http.ResponseWriter, req *http.Request) {
 
 	countRows := 0
 	for rows.Next() {
-        err = rows.Scan(&shortKey, &originalUrl)
+        err = rows.Scan(&shortKey, &originalURL)
         if err != nil {
            continue
         }
 
 		result = append(result, models.ShortUrlItem{
-			OriginalURL: originalUrl,
+			OriginalURL: originalURL,
 			ShortURL: config.FlagBaseAddr + "/" + shortKey,
 		})
 
