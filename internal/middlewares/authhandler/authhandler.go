@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
-	//"github.com/google/uuid"
+	"github.com/google/uuid"
 )
 
 type Claims struct {
@@ -25,8 +25,8 @@ func AuthHandle(handlerFunc http.HandlerFunc) http.HandlerFunc {
 		var userID string
 		jwtToken, err := r.Cookie("JWT")
 		if err != nil {
-			//id := uuid.New()
-			userID = "123456"//id.String()
+			id := uuid.New()
+			userID = id.String()
 
 			tokenString, err := buildJWTString(userID)
 			if err != nil {
@@ -36,6 +36,7 @@ func AuthHandle(handlerFunc http.HandlerFunc) http.HandlerFunc {
 				Name: "JWT",
 				Value: tokenString,
 				Expires: time.Now().Add(24 * time.Hour),
+				Path: "/",
 			}
 		
 			http.SetCookie(w, cookie)

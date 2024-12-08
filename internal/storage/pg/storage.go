@@ -3,7 +3,7 @@ package pg
 import (
 	"context"
 	"database/sql"
-    
+
     "github.com/dsemenov12/shorturl/internal/middlewares/authhandler"
 )
 
@@ -61,5 +61,5 @@ func (s StorageDB) Get(ctx context.Context, shortKey string) (redirectLink strin
 }
 
 func (s StorageDB) GetUserURL(ctx context.Context) (rows *sql.Rows, err error) {
-    return s.conn.QueryContext(ctx, "SELECT short_key, url FROM storage WHERE user_id=$1", ctx.Value("user_id"));
+    return s.conn.QueryContext(ctx, "SELECT short_key, url FROM storage WHERE user_id=$1", ctx.Value(authhandler.UserIDKey));
 }
