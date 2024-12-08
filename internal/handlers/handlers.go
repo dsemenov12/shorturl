@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 
@@ -182,8 +181,6 @@ func (a *app) UserUrls(res http.ResponseWriter, req *http.Request) {
 		return
     }
 	defer rows.Close()
-
-	fmt.Println(rows)
 
 	countRows := 0
 	for rows.Next() {

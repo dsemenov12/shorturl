@@ -5,20 +5,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
+	"github.com/dsemenov12/shorturl/internal/auth"
 )
-
-type Claims struct {
-    jwt.RegisteredClaims
-    UserID string
-}
-
-type userContextKey string
-const UserIDKey userContextKey = "user_id"
-
-const TokenExp = time.Hour * 24
-const SecretKey = "supersecretkey"
 
 func AuthHandle(handlerFunc http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -28,7 +17,7 @@ func AuthHandle(handlerFunc http.HandlerFunc) http.HandlerFunc {
 			id := uuid.New()
 			userID = id.String()
 
-			tokenString, err := buildJWTString(userID)
+			tokenString, err := auth.BuildJWTString(userID)
 			if err != nil {
 				return
 			}
@@ -41,44 +30,15 @@ func AuthHandle(handlerFunc http.HandlerFunc) http.HandlerFunc {
 		
 			http.SetCookie(w, cookie)
 		} else {
-			userID, err = getUserID(jwtToken.Value)
+			userID, err = auth.GetUserID(jwtToken.Value)
 			if err != nil || userID == "" {
 				w.WriteHeader(http.StatusUnauthorized)
 				return
 			}
 		}
 		
-		r = r.WithContext(context.WithValue(context.Background(), UserIDKey, userID))
+		r = r.WithContext(context.WithValue(context.Background(), auth.UserIDKey, userID))
 
 		handlerFunc(w, r)
 	})
-}
-
-func buildJWTString(userID string) (string, error) {
-    token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims {
-        RegisteredClaims: jwt.RegisteredClaims{
-            ExpiresAt: jwt.NewNumericDate(time.Now().Add(TokenExp)),
-        },
-        UserID: userID,
-    })
-
-    tokenString, err := token.SignedString([]byte(SecretKey))
-    if err != nil {
-        return "", err
-    }
-
-    return tokenString, nil
-}
-
-func getUserID(tokenString string) (string, error) {
-    claims := &Claims{}
-
-    _, err := jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (interface{}, error) {
-        return []byte(SecretKey), nil
-    })
-	if err != nil {
-		return "", err
-	}
-
-    return claims.UserID, nil
 }

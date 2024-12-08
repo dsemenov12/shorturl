@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 
-    "github.com/dsemenov12/shorturl/internal/middlewares/authhandler"
+    "github.com/dsemenov12/shorturl/internal/auth"
 )
 
 type StorageDB struct {
@@ -43,7 +43,7 @@ func (s StorageDB) Bootstrap(ctx context.Context) error  {
 }
 
 func (s StorageDB) Set(ctx context.Context, shortKey string, url string) (shortKeyResult string, err error) {
-	_, err = s.conn.ExecContext(ctx, "INSERT INTO storage (short_key, url, user_id) VALUES ($1, $2, $3)", shortKey, url, ctx.Value(authhandler.UserIDKey))
+	_, err = s.conn.ExecContext(ctx, "INSERT INTO storage (short_key, url, user_id) VALUES ($1, $2, $3)", shortKey, url, ctx.Value(auth.UserIDKey))
 	if err != nil {
 		row := s.conn.QueryRowContext(ctx, "SELECT short_key FROM storage WHERE url=$1", url)
 		row.Scan(&shortKeyResult)
@@ -61,5 +61,5 @@ func (s StorageDB) Get(ctx context.Context, shortKey string) (redirectLink strin
 }
 
 func (s StorageDB) GetUserURL(ctx context.Context) (rows *sql.Rows, err error) {
-    return s.conn.QueryContext(ctx, "SELECT short_key, url FROM storage WHERE user_id=$1", ctx.Value(authhandler.UserIDKey));
+    return s.conn.QueryContext(ctx, "SELECT short_key, url FROM storage WHERE user_id=$1", ctx.Value(auth.UserIDKey));
 }
