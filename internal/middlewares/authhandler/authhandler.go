@@ -25,8 +25,8 @@ func AuthHandle(handlerFunc http.HandlerFunc) http.HandlerFunc {
 		var userID string
 		jwtToken, err := r.Cookie("JWT")
 		if err != nil {
-			id := uuid.New()
-			userID = id.String()
+			//id := uuid.New()
+			userID = "123456"//id.String()
 
 			tokenString, err := buildJWTString(userID)
 			if err != nil {
