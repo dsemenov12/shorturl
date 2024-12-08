@@ -272,3 +272,7 @@ func TestRedirect(t *testing.T) {
 		})
 	}
 }
+
+func TestUserUrls(t *testing.T) {
+	
+}
