@@ -17,7 +17,7 @@ type Claims struct {
     UserID string
 }
 
-func AuthHandle(next http.Handler) http.Handler {
+func AuthHandle(handlerFunc http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var userID string
 		jwtToken, err := r.Cookie("JWT")
@@ -46,7 +46,7 @@ func AuthHandle(next http.Handler) http.Handler {
 		
 		r = r.WithContext(context.WithValue(r.Context(), "user_id", userID))
 
-		next.ServeHTTP(w, r)
+		handlerFunc(w, r)
 	})
 }
 

@@ -53,7 +53,7 @@ func (s StorageDB) Set(ctx context.Context, shortKey string, url string) (shortK
 }
 
 func (s StorageDB) Get(ctx context.Context, shortKey string) (redirectLink string, err error) {
-    row := s.conn.QueryRowContext(ctx, "SELECT short_key, url FROM storage WHERE short_key=$1", shortKey)
+    row := s.conn.QueryRowContext(ctx, "SELECT url FROM storage WHERE short_key=$1", shortKey)
 	err = row.Scan(&redirectLink)
 	return
 }
