@@ -208,7 +208,7 @@ func (a *app) UserUrls(res http.ResponseWriter, req *http.Request) {
         return
     }
 
-	res.Header().Set("Content-Type", "text/plain")
+	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusOK)
 	res.Write(resp)
 }

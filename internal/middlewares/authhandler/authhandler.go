@@ -1,33 +1,33 @@
 package authhandler
 
 import (
+	"context"
 	"net/http"
 	"time"
-	"context"
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 )
-
-const TokenExp = time.Hour * 24
-const SecretKey = "supersecretkey"
 
 type Claims struct {
     jwt.RegisteredClaims
     UserID string
 }
 
-type contextKey string
-const userIDKey contextKey = "user_id"
+type userContextKey string
+const UserIDKey userContextKey = "user_id"
+
+const TokenExp = time.Hour * 24
+const SecretKey = "supersecretkey"
 
 func AuthHandle(handlerFunc http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var userID string
 		jwtToken, err := r.Cookie("JWT")
 		if err != nil {
-			// установит куку
 			id := uuid.New()
 			userID = id.String()
+
 			tokenString, err := buildJWTString(userID)
 			if err != nil {
 				return
@@ -47,7 +47,7 @@ func AuthHandle(handlerFunc http.HandlerFunc) http.HandlerFunc {
 			}
 		}
 		
-		r = r.WithContext(context.WithValue(r.Context(), userIDKey, userID))
+		r = r.WithContext(context.WithValue(context.Background(), UserIDKey, userID))
 
 		handlerFunc(w, r)
 	})

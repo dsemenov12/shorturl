@@ -3,6 +3,8 @@ package pg
 import (
 	"context"
 	"database/sql"
+    
+    "github.com/dsemenov12/shorturl/internal/middlewares/authhandler"
 )
 
 type StorageDB struct {
@@ -41,7 +43,7 @@ func (s StorageDB) Bootstrap(ctx context.Context) error  {
 }
 
 func (s StorageDB) Set(ctx context.Context, shortKey string, url string) (shortKeyResult string, err error) {
-	_, err = s.conn.ExecContext(ctx, "INSERT INTO storage (short_key, url, user_id) VALUES ($1, $2, $3)", shortKey, url, ctx.Value("user_id"))
+	_, err = s.conn.ExecContext(ctx, "INSERT INTO storage (short_key, url, user_id) VALUES ($1, $2, $3)", shortKey, url, ctx.Value(authhandler.UserIDKey))
 	if err != nil {
 		row := s.conn.QueryRowContext(ctx, "SELECT short_key FROM storage WHERE url=$1", url)
 		row.Scan(&shortKeyResult)
