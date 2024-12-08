@@ -1,8 +1,8 @@
 package pg
 
 import (
-    "context"
-    "database/sql"
+	"context"
+	"database/sql"
 )
 
 type StorageDB struct {
@@ -23,7 +23,8 @@ func (s StorageDB) Bootstrap(ctx context.Context) error  {
     _, err = tx.ExecContext(ctx, `
 		CREATE TABLE IF NOT EXISTS storage(
 			short_key varchar(128),
-			url TEXT UNIQUE
+			url TEXT UNIQUE,
+			user_id varchar(36)
 		)
     `)
 	if err != nil {
@@ -40,9 +41,9 @@ func (s StorageDB) Bootstrap(ctx context.Context) error  {
 }
 
 func (s StorageDB) Set(ctx context.Context, shortKey string, url string) (shortKeyResult string, err error) {
-	_, err = s.conn.ExecContext(ctx, "INSERT INTO storage (short_key, url) VALUES ($1, $2)", shortKey, url)
+	_, err = s.conn.ExecContext(ctx, "INSERT INTO storage (short_key, url, user_id) VALUES ($1, $2, $3)", shortKey, url, ctx.Value("user_id"))
 	if err != nil {
-		row := s.conn.QueryRowContext(ctx, "SELECT short_key FROM storage WHERE url=$1", url)
+		row := s.conn.QueryRowContext(ctx, "SELECT short_key FROM storage WHERE url=$1 AND user_id=$2", url, ctx.Value("user_id"))
 		row.Scan(&shortKeyResult)
 	} else {
 		shortKeyResult = shortKey
@@ -52,7 +53,11 @@ func (s StorageDB) Set(ctx context.Context, shortKey string, url string) (shortK
 }
 
 func (s StorageDB) Get(ctx context.Context, shortKey string) (redirectLink string, err error) {
-	row := s.conn.QueryRowContext(ctx, "SELECT url FROM storage WHERE short_key=$1", shortKey)
+    row := s.conn.QueryRowContext(ctx, "SELECT short_key, url FROM storage WHERE short_key=$1", shortKey)
 	err = row.Scan(&redirectLink)
 	return
+}
+
+func (s StorageDB) GetUserUrl(ctx context.Context) (rows *sql.Rows, err error) {
+    return s.conn.QueryContext(ctx, "SELECT short_key, url FROM storage WHERE user_id=$1", ctx.Value("user_id"));
 }

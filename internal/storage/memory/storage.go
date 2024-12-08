@@ -3,6 +3,7 @@ package memory
 import (
 	"context"
 	"sync"
+	"database/sql"
 
 	"github.com/dsemenov12/shorturl/internal/filestorage"
 )
@@ -34,4 +35,8 @@ func (s *StorageMemory) Set(ctx context.Context, key string, value string) (stri
 func (s *StorageMemory) Bootstrap(ctx context.Context) error {
 	filestorage.Load(s)
 	return nil
+}
+
+func (s *StorageMemory) GetUserUrl(ctx context.Context) (rows *sql.Rows, err error) {
+    return nil, nil
 }

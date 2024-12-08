@@ -7,8 +7,8 @@ import (
 
 	"github.com/dsemenov12/shorturl/internal/config"
 	"github.com/dsemenov12/shorturl/internal/filestorage"
-	"github.com/dsemenov12/shorturl/internal/storage"
 	"github.com/dsemenov12/shorturl/internal/models"
+	"github.com/dsemenov12/shorturl/internal/storage"
 	"github.com/dsemenov12/shorturl/internal/util"
 	"github.com/go-chi/chi/v5"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -168,4 +168,47 @@ func (a *app) Redirect(res http.ResponseWriter, req *http.Request) {
 	}
 
 	http.Redirect(res, req, redirectLink, http.StatusTemporaryRedirect)
+}
+
+func (a *app) UserUrls(res http.ResponseWriter, req *http.Request) {
+	var result []models.ShortUrlItem
+	var shortKey string
+	var originalUrl string
+
+	rows, err := a.storage.GetUserUrl(req.Context())
+	if err != nil {
+        http.Error(res, err.Error(), http.StatusNoContent)
+		return
+    }
+	defer rows.Close()
+
+	countRows := 0
+	for rows.Next() {
+        err = rows.Scan(&shortKey, &originalUrl)
+        if err != nil {
+           continue
+        }
+
+		result = append(result, models.ShortUrlItem{
+			OriginalURL: originalUrl,
+			ShortURL: config.FlagBaseAddr + "/" + shortKey,
+		})
+
+		countRows++
+    }
+
+	if countRows == 0 {
+        http.Error(res, "", http.StatusNoContent)
+		return
+    }
+
+	resp, err := json.MarshalIndent(result, "", "    ")
+    if err != nil {
+        http.Error(res, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+	res.Header().Set("Content-Type", "text/plain")
+	res.WriteHeader(http.StatusOK)
+	res.Write(resp)
 }
