@@ -9,8 +9,8 @@ import (
 	"github.com/google/uuid"
 )
 
-const TOKEN_EXP = time.Hour * 24
-const SECRET_KEY = "supersecretkey"
+const TokenExp = time.Hour * 24
+const SecretKey = "supersecretkey"
 
 type Claims struct {
     jwt.RegisteredClaims
@@ -53,12 +53,12 @@ func AuthHandle(next http.Handler) http.Handler {
 func buildJWTString(userID string) (string, error) {
     token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims {
         RegisteredClaims: jwt.RegisteredClaims{
-            ExpiresAt: jwt.NewNumericDate(time.Now().Add(TOKEN_EXP)),
+            ExpiresAt: jwt.NewNumericDate(time.Now().Add(TokenExp)),
         },
         UserID: userID,
     })
 
-    tokenString, err := token.SignedString([]byte(SECRET_KEY))
+    tokenString, err := token.SignedString([]byte(SecretKey))
     if err != nil {
         return "", err
     }
@@ -70,7 +70,7 @@ func getUserID(tokenString string) (string, error) {
     claims := &Claims{}
 
     _, err := jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (interface{}, error) {
-        return []byte(SECRET_KEY), nil
+        return []byte(SecretKey), nil
     })
 	if err != nil {
 		return "", err
