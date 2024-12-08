@@ -18,7 +18,7 @@ type BatchResultItem struct {
 	ShortURL string `json:"short_url"`
 }
 
-type ShortUrlItem struct {
+type ShortURLItem struct {
 	ShortURL string `json:"short_url"`
 	OriginalURL string `json:"original_url"`
 }

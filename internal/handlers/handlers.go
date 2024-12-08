@@ -171,7 +171,7 @@ func (a *app) Redirect(res http.ResponseWriter, req *http.Request) {
 }
 
 func (a *app) UserUrls(res http.ResponseWriter, req *http.Request) {
-	var result []models.ShortUrlItem
+	var result []models.ShortURLItem
 	var shortKey string
 	var originalURL string
 
@@ -189,7 +189,7 @@ func (a *app) UserUrls(res http.ResponseWriter, req *http.Request) {
            continue
         }
 
-		result = append(result, models.ShortUrlItem{
+		result = append(result, models.ShortURLItem{
 			OriginalURL: originalURL,
 			ShortURL: config.FlagBaseAddr + "/" + shortKey,
 		})
