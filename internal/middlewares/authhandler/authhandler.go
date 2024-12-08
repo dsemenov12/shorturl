@@ -17,6 +17,9 @@ type Claims struct {
     UserID string
 }
 
+type contextKey string
+const userIDKey contextKey = "user_id"
+
 func AuthHandle(handlerFunc http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var userID string
@@ -44,7 +47,7 @@ func AuthHandle(handlerFunc http.HandlerFunc) http.HandlerFunc {
 			}
 		}
 		
-		r = r.WithContext(context.WithValue(r.Context(), "user_id", userID))
+		r = r.WithContext(context.WithValue(r.Context(), userIDKey, userID))
 
 		handlerFunc(w, r)
 	})
