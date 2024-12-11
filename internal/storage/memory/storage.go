@@ -9,7 +9,7 @@ import (
 )
 
 type StorageMemory struct {
-	mx sync.Mutex
+	mx sync.RWMutex
     Data map[string]string
 }
 
@@ -18,10 +18,10 @@ func NewStorage() *StorageMemory {
     return &StorageObj
 }
 
-func (s *StorageMemory) Get(ctx context.Context, key string) (string, error) {
-	s.mx.Lock()
-    defer s.mx.Unlock()
-    return s.Data[key], nil
+func (s *StorageMemory) Get(ctx context.Context, key string) (string, string, error) {
+	s.mx.RLock()
+    defer s.mx.RUnlock()
+    return s.Data[key], key, nil
 }
 
 func (s *StorageMemory) Set(ctx context.Context, key string, value string) (string, error) {
@@ -39,4 +39,9 @@ func (s *StorageMemory) Bootstrap(ctx context.Context) error {
 
 func (s *StorageMemory) GetUserURL(ctx context.Context) (rows *sql.Rows, err error) {
     return nil, nil
+}
+
+func (s *StorageMemory) Delete(ctx context.Context, shortKey string) (result sql.Result, err error) {
+	delete(s.Data, shortKey)
+	return nil, nil
 }

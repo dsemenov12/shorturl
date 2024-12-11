@@ -274,5 +274,9 @@ func TestRedirect(t *testing.T) {
 }
 
 func TestUserUrls(t *testing.T) {
+
+}
+
+func DeleteUserUrls(t *testing.T) {
 	
 }

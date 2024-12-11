@@ -1,9 +1,12 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
+	"sync"
 
 	"github.com/dsemenov12/shorturl/internal/config"
 	"github.com/dsemenov12/shorturl/internal/filestorage"
@@ -162,7 +165,7 @@ func (a *app) Redirect(res http.ResponseWriter, req *http.Request) {
 	var redirectLink string
 	var err error
 
-	redirectLink, err = a.storage.Get(req.Context(), shortKey)
+	redirectLink, _, err = a.storage.Get(req.Context(), shortKey)
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusNotFound)
 	}
@@ -211,4 +214,97 @@ func (a *app) UserUrls(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusOK)
 	res.Write(resp)
+}
+
+func (a *app) DeleteUserUrls(res http.ResponseWriter, req *http.Request) {
+	var shortKeys []string
+
+	body, err := io.ReadAll(req.Body)
+	if err != nil {
+		http.Error(res, "error", http.StatusBadRequest)
+		return
+	}
+	if string(body) == "" {
+		http.Error(res, "empty body", http.StatusBadRequest)
+		return
+	}
+	if err = json.Unmarshal(body, &shortKeys); err != nil {
+		http.Error(res, err.Error(), http.StatusBadRequest)
+		return
+	}
+	defer req.Body.Close()
+
+	doneCh := make(chan struct{})
+	defer close(doneCh)
+
+	inputCh := generator(doneCh, shortKeys)
+
+	resultCh := a.delete(
+		req.Context(), doneCh, a.get(
+			req.Context(), doneCh, inputCh,
+		),
+	)
+
+	for res := range resultCh {
+        fmt.Println(res)
+    }
+
+	res.WriteHeader(http.StatusAccepted)
+}
+
+func (a *app) get(ctx context.Context, doneCh chan struct{}, inputCh chan string) chan string {
+	getRes := make(chan string)
+
+	go func() {
+		defer close(getRes)
+		for data := range inputCh {
+			_, result, _ := a.storage.Get(ctx, data)
+
+			select {
+			case <-doneCh:
+				return
+			case getRes <- result:
+			}
+		}
+	}()
+
+	return getRes
+}
+
+func (a *app) delete(ctx context.Context, doneCh chan struct{}, inputCh chan string) chan string {
+	deleteRes := make(chan string)
+
+	go func() {
+		defer close(deleteRes)
+
+		for data := range inputCh {
+			a.storage.Delete(ctx, data)
+
+			select {
+			case <-doneCh:
+				return
+			case deleteRes <- "ok":
+			}
+		}
+	}()
+
+	return deleteRes
+}
+
+func generator(doneCh chan struct{}, input []string) chan string {
+	inputCh := make(chan string)
+
+	go func() {
+		defer close(inputCh)
+
+		for _, data := range input {
+			select {
+			case <-doneCh:
+				return
+			case inputCh <- data:
+			}
+		}
+	}()
+
+	return inputCh
 }

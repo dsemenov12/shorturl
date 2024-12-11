@@ -9,7 +9,7 @@ import (
 
 	"github.com/dsemenov12/shorturl/internal/config"
 	"github.com/dsemenov12/shorturl/internal/handlers"
-	"github.com/dsemenov12/shorturl/internal/logger"
+	"github.com/dsemenov12/shorturl/internal/middlewares/logger"
 	"github.com/dsemenov12/shorturl/internal/middlewares/gziphandler"
 	"github.com/dsemenov12/shorturl/internal/middlewares/authhandler"
 	"github.com/dsemenov12/shorturl/internal/middlewares/authcookiehandler"
@@ -71,7 +71,8 @@ func run() error {
 	router.Post("/api/shorten", logger.RequestLogger(authhandler.AuthHandle(app.ShortenPost)))
 	router.Post("/api/shorten/batch", logger.RequestLogger(authhandler.AuthHandle(app.ShortenBatchPost)))
     router.Get(baseURL.Path + "/{id}", logger.RequestLogger(app.Redirect))
-	router.Get("/api/user/urls", logger.RequestLogger(authcookiehandler.SetAuthCookieHandle(app.UserUrls)))
+	router.Get("/api/user/urls", logger.RequestLogger(authcookiehandler.AuthCookieHandle(app.UserUrls)))
+	router.Delete("/api/user/urls", logger.RequestLogger(authcookiehandler.AuthCookieHandle(app.DeleteUserUrls)))
 
 	err = http.ListenAndServe(
 		config.FlagRunAddr,

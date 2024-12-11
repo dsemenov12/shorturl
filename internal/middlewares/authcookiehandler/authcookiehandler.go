@@ -7,7 +7,7 @@ import (
 	"github.com/dsemenov12/shorturl/internal/auth"
 )
 
-func SetAuthCookieHandle(handlerFunc http.HandlerFunc) http.HandlerFunc {
+func AuthCookieHandle(handlerFunc http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var userID string
 		jwtToken, _ := r.Cookie("JWT")
