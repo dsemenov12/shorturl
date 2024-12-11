@@ -18,10 +18,10 @@ func NewStorage() *StorageMemory {
     return &StorageObj
 }
 
-func (s *StorageMemory) Get(ctx context.Context, key string) (string, string, error) {
+func (s *StorageMemory) Get(ctx context.Context, key string) (string, string, bool, error) {
 	s.mx.RLock()
     defer s.mx.RUnlock()
-    return s.Data[key], key, nil
+    return s.Data[key], key, false, nil
 }
 
 func (s *StorageMemory) Set(ctx context.Context, key string, value string) (string, error) {

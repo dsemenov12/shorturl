@@ -3,7 +3,6 @@ package pg
 import (
 	"context"
 	"database/sql"
-	"fmt"
 
 	"github.com/dsemenov12/shorturl/internal/auth"
 )
@@ -35,7 +34,7 @@ func (s StorageDB) Bootstrap(ctx context.Context) error  {
 			user_id varchar(36),
 			short_key varchar(128),
 			url text UNIQUE,
-			is_deleted boolean
+			is_deleted boolean DEFAULT false
 		)
     `)
 	if err != nil {
@@ -63,9 +62,9 @@ func (s StorageDB) Set(ctx context.Context, shortKey string, url string) (shortK
 	return shortKeyResult, err
 }
 
-func (s StorageDB) Get(ctx context.Context, shortKey string) (redirectLink string, shortKeyRes string, err error) {
-    row := s.conn.QueryRowContext(ctx, "SELECT url, short_key FROM storage WHERE short_key=$1", shortKey)
-	err = row.Scan(&redirectLink, &shortKeyRes)
+func (s StorageDB) Get(ctx context.Context, shortKey string) (redirectLink string, shortKeyRes string, isDeleted bool, err error) {
+    row := s.conn.QueryRowContext(ctx, "SELECT url, short_key, is_deleted FROM storage WHERE short_key=$1", shortKey)
+	err = row.Scan(&redirectLink, &shortKeyRes, &isDeleted)
 	return
 }
 
@@ -74,8 +73,5 @@ func (s StorageDB) GetUserURL(ctx context.Context) (rows *sql.Rows, err error) {
 }
 
 func (s StorageDB) Delete(ctx context.Context, shortKey string) (result sql.Result, err error) {
-	fmt.Println("UPDATE storage SET is_deleted=true WHERE short_key=$1")
-	fmt.Println(shortKey)
-
     return s.conn.ExecContext(ctx, "UPDATE storage SET is_deleted=true WHERE short_key=$1", shortKey)
 }

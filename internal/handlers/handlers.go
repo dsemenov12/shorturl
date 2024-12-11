@@ -164,9 +164,12 @@ func (a *app) Redirect(res http.ResponseWriter, req *http.Request) {
 	var redirectLink string
 	var err error
 
-	redirectLink, _, err = a.storage.Get(req.Context(), shortKey)
+	redirectLink, _, isDeleted, err := a.storage.Get(req.Context(), shortKey)
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusNotFound)
+	}
+	if isDeleted == true {
+		http.Error(res, "", http.StatusGone)
 	}
 
 	http.Redirect(res, req, redirectLink, http.StatusTemporaryRedirect)
@@ -257,7 +260,7 @@ func (a *app) get(ctx context.Context, doneCh chan struct{}, inputCh chan string
 	go func() {
 		defer close(getRes)
 		for data := range inputCh {
-			_, result, _ := a.storage.Get(ctx, data)
+			_, result, _, _ := a.storage.Get(ctx, data)
 
 			select {
 			case <-doneCh:
