@@ -168,7 +168,7 @@ func (a *app) Redirect(res http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusNotFound)
 	}
-	if isDeleted == true {
+	if isDeleted {
 		http.Error(res, "", http.StatusGone)
 	}
 
