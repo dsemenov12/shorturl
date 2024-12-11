@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"sync"
 
 	"github.com/dsemenov12/shorturl/internal/config"
 	"github.com/dsemenov12/shorturl/internal/filestorage"
