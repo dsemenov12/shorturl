@@ -241,36 +241,13 @@ func (a *app) DeleteUserUrls(res http.ResponseWriter, req *http.Request) {
 
 	inputCh := generator(doneCh, shortKeys)
 
-	resultCh := a.delete(
-		req.Context(), doneCh, a.get(
-			req.Context(), doneCh, inputCh,
-		),
-	)
+	resultCh := a.delete(req.Context(), doneCh, inputCh)
 
 	for res := range resultCh {
         fmt.Println(res)
     }
 
 	res.WriteHeader(http.StatusAccepted)
-}
-
-func (a *app) get(ctx context.Context, doneCh chan struct{}, inputCh chan string) chan string {
-	getRes := make(chan string)
-
-	go func() {
-		defer close(getRes)
-		for data := range inputCh {
-			_, result, _, _ := a.storage.Get(ctx, data)
-
-			select {
-			case <-doneCh:
-				return
-			case getRes <- result:
-			}
-		}
-	}()
-
-	return getRes
 }
 
 func (a *app) delete(ctx context.Context, doneCh chan struct{}, inputCh chan string) chan string {

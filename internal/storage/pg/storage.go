@@ -73,5 +73,5 @@ func (s StorageDB) GetUserURL(ctx context.Context) (rows *sql.Rows, err error) {
 }
 
 func (s StorageDB) Delete(ctx context.Context, shortKey string) (result sql.Result, err error) {
-    return s.conn.ExecContext(ctx, "UPDATE storage SET is_deleted=true WHERE short_key=$1", shortKey)
+    return s.conn.ExecContext(ctx, "UPDATE storage SET is_deleted=true WHERE short_key=$1 AND user_id=$2", shortKey, ctx.Value(auth.UserIDKey))
 }
