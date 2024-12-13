@@ -164,7 +164,11 @@ func (a *app) Redirect(res http.ResponseWriter, req *http.Request) {
 	var redirectLink string
 	var err error
 
-	redirectLink, _, isDeleted, err := a.storage.Get(req.Context(), shortKey)
+	redirectLink, shortKeyRes, isDeleted, err := a.storage.Get(req.Context(), shortKey)
+
+	fmt.Println("get redirect")
+	fmt.Println(shortKeyRes)
+
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusNotFound)
         return
