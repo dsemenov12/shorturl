@@ -3,7 +3,6 @@ package pg
 import (
 	"context"
 	"database/sql"
-	"fmt"
 
 	"github.com/dsemenov12/shorturl/internal/auth"
 )
@@ -72,9 +71,5 @@ func (s StorageDB) GetUserURL(ctx context.Context) (rows *sql.Rows, err error) {
 }
 
 func (s StorageDB) Delete(ctx context.Context, shortKey string) (result sql.Result, err error) {
-    fmt.Println("delete")
-    fmt.Println(shortKey)
-    fmt.Println(ctx.Value(auth.UserIDKey))
-
     return s.conn.ExecContext(ctx, "UPDATE storage SET is_deleted=true WHERE short_key=$1 AND user_id=$2", shortKey, ctx.Value(auth.UserIDKey))
 }

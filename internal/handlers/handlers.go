@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/dsemenov12/shorturl/internal/config"
 	"github.com/dsemenov12/shorturl/internal/filestorage"
@@ -164,10 +165,7 @@ func (a *app) Redirect(res http.ResponseWriter, req *http.Request) {
 	var redirectLink string
 	var err error
 
-	redirectLink, shortKeyRes, isDeleted, err := a.storage.Get(req.Context(), shortKey)
-
-	fmt.Println("get redirect")
-	fmt.Println(shortKeyRes)
+	redirectLink, _, isDeleted, err := a.storage.Get(req.Context(), shortKey)
 
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusNotFound)
@@ -263,7 +261,10 @@ func (a *app) delete(ctx context.Context, doneCh chan struct{}, inputCh chan str
 		defer close(deleteRes)
 
 		for data := range inputCh {
-			a.storage.Delete(ctx, data)
+			splitData := strings.Split(data, "/")
+			code := splitData[len(splitData) - 1]
+
+			a.storage.Delete(ctx, code)
 
 			select {
 			case <-doneCh:
