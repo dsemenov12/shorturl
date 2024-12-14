@@ -9,6 +9,7 @@ import (
 	sql "database/sql"
 	reflect "reflect"
 
+	models "github.com/dsemenov12/shorturl/internal/models"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -82,10 +83,10 @@ func (mr *MockStorageMockRecorder) Get(ctx, shortKey interface{}) *gomock.Call {
 }
 
 // GetUserURL mocks base method.
-func (m *MockStorage) GetUserURL(ctx context.Context) (*sql.Rows, error) {
+func (m *MockStorage) GetUserURL(ctx context.Context) ([]models.ShortURLItem, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetUserURL", ctx)
-	ret0, _ := ret[0].(*sql.Rows)
+	ret0, _ := ret[0].([]models.ShortURLItem)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
