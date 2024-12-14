@@ -89,6 +89,11 @@ func (s StorageDB) GetUserURL(ctx context.Context) (result []models.ShortURLItem
 		})
     }
 
+	err = rows.Err()
+    if err != nil {
+        return nil, err
+    }
+
 	return result, nil
 }
 
