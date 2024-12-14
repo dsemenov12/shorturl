@@ -75,6 +75,7 @@ func TestShortenBatchPost(t *testing.T) {
 			app.ShortenBatchPost(response, request)
 
 			res := response.Result()
+			defer res.Body.Close()
             
             assert.Equal(t, test.want.code, res.StatusCode)
 		})
@@ -134,7 +135,6 @@ func TestShortenPost(t *testing.T) {
 
 			app.ShortenPost(response, request)
 			
-
 			res := response.Result()
 
 			body, err := io.ReadAll(res.Body)
