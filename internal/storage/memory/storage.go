@@ -6,6 +6,7 @@ import (
 	"database/sql"
 
 	"github.com/dsemenov12/shorturl/internal/filestorage"
+	"github.com/dsemenov12/shorturl/internal/models"
 )
 
 type StorageMemory struct {
@@ -37,7 +38,7 @@ func (s *StorageMemory) Bootstrap(ctx context.Context) error {
 	return nil
 }
 
-func (s *StorageMemory) GetUserURL(ctx context.Context) (rows *sql.Rows, err error) {
+func (s *StorageMemory) GetUserURL(ctx context.Context) (result []models.ShortURLItem, err error) {
     return nil, nil
 }
 

@@ -12,7 +12,7 @@ import (
 	"github.com/dsemenov12/shorturl/internal/filestorage"
 	"github.com/dsemenov12/shorturl/internal/models"
 	"github.com/dsemenov12/shorturl/internal/storage"
-	"github.com/dsemenov12/shorturl/internal/util"
+	"github.com/dsemenov12/shorturl/internal/rand"
 	"github.com/go-chi/chi/v5"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
@@ -32,7 +32,7 @@ func NewApp(storage storage.Storage) *app {
 func (a *app) ShortenPost(res http.ResponseWriter, req *http.Request) {
 	var inputDataValue models.InputData
 
-	shortKey := util.RandStringBytes(8)
+	shortKey := rand.RandStringBytes(8)
 	shortURL := config.FlagBaseAddr + "/" + shortKey
 	status := http.StatusCreated
 
@@ -129,7 +129,7 @@ func (a *app) ShortenBatchPost(res http.ResponseWriter, req *http.Request) {
 }
 
 func (a *app) PostURL(res http.ResponseWriter, req *http.Request) {
-	shortKey := util.RandStringBytes(8)
+	shortKey := rand.RandStringBytes(8)
 	shortURL := config.FlagBaseAddr + "/" + shortKey
 	status := http.StatusCreated
 
@@ -180,34 +180,9 @@ func (a *app) Redirect(res http.ResponseWriter, req *http.Request) {
 }
 
 func (a *app) UserUrls(res http.ResponseWriter, req *http.Request) {
-	var result []models.ShortURLItem
-	var shortKey string
-	var originalURL string
-
-	rows, err := a.storage.GetUserURL(req.Context())
+	result, err := a.storage.GetUserURL(req.Context())
 	if err != nil {
         http.Error(res, err.Error(), http.StatusNoContent)
-		return
-    }
-	defer rows.Close()
-
-	countRows := 0
-	for rows.Next() {
-        err = rows.Scan(&shortKey, &originalURL)
-        if err != nil {
-           continue
-        }
-
-		result = append(result, models.ShortURLItem{
-			OriginalURL: originalURL,
-			ShortURL: config.FlagBaseAddr + "/" + shortKey,
-		})
-
-		countRows++
-    }
-
-	if countRows == 0 {
-        http.Error(res, "", http.StatusNoContent)
 		return
     }
 

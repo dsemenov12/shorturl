@@ -5,6 +5,8 @@ import (
 	"database/sql"
 
 	"github.com/dsemenov12/shorturl/internal/auth"
+	"github.com/dsemenov12/shorturl/internal/models"
+	"github.com/dsemenov12/shorturl/internal/config"
 )
 
 type StorageItem struct {
@@ -66,8 +68,28 @@ func (s StorageDB) Get(ctx context.Context, shortKey string) (redirectLink strin
 	return
 }
 
-func (s StorageDB) GetUserURL(ctx context.Context) (rows *sql.Rows, err error) {
-    return s.conn.QueryContext(ctx, "SELECT short_key, url FROM storage WHERE user_id=$1", ctx.Value(auth.UserIDKey))
+func (s StorageDB) GetUserURL(ctx context.Context) (result []models.ShortURLItem, err error) {
+	var shortKey string
+	var originalURL string
+
+    rows, err := s.conn.QueryContext(ctx, "SELECT short_key, url FROM storage WHERE user_id=$1", ctx.Value(auth.UserIDKey))
+	if err != nil {
+        return nil, err
+    }
+
+	for rows.Next() {
+        err = rows.Scan(&shortKey, &originalURL)
+        if err != nil {
+           continue
+        }
+
+		result = append(result, models.ShortURLItem{
+			OriginalURL: originalURL,
+			ShortURL: config.FlagBaseAddr + "/" + shortKey,
+		})
+    }
+
+	return result, nil
 }
 
 func (s StorageDB) Delete(ctx context.Context, shortKey string) (result sql.Result, err error) {

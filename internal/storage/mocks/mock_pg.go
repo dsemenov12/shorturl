@@ -6,6 +6,7 @@ package mock_pg
 
 import (
 	context "context"
+	sql "database/sql"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -48,19 +49,51 @@ func (mr *MockStorageMockRecorder) Bootstrap(ctx interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Bootstrap", reflect.TypeOf((*MockStorage)(nil).Bootstrap), ctx)
 }
 
+// Delete mocks base method.
+func (m *MockStorage) Delete(ctx context.Context, shortKey string) (sql.Result, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Delete", ctx, shortKey)
+	ret0, _ := ret[0].(sql.Result)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Delete indicates an expected call of Delete.
+func (mr *MockStorageMockRecorder) Delete(ctx, shortKey interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockStorage)(nil).Delete), ctx, shortKey)
+}
+
 // Get mocks base method.
-func (m *MockStorage) Get(ctx context.Context, shortKey string) (string, error) {
+func (m *MockStorage) Get(ctx context.Context, shortKey string) (string, string, bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", ctx, shortKey)
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(string)
+	ret2, _ := ret[2].(bool)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
 }
 
 // Get indicates an expected call of Get.
 func (mr *MockStorageMockRecorder) Get(ctx, shortKey interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockStorage)(nil).Get), ctx, shortKey)
+}
+
+// GetUserURL mocks base method.
+func (m *MockStorage) GetUserURL(ctx context.Context) (*sql.Rows, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserURL", ctx)
+	ret0, _ := ret[0].(*sql.Rows)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserURL indicates an expected call of GetUserURL.
+func (mr *MockStorageMockRecorder) GetUserURL(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserURL", reflect.TypeOf((*MockStorage)(nil).GetUserURL), ctx)
 }
 
 // Set mocks base method.
