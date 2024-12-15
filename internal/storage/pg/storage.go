@@ -97,6 +97,10 @@ func (s StorageDB) GetUserURL(ctx context.Context) (result []models.ShortURLItem
 	return result, nil
 }
 
-func (s StorageDB) Delete(ctx context.Context, shortKey string) (result sql.Result, err error) {
-    return s.conn.ExecContext(ctx, "UPDATE storage SET is_deleted=true WHERE short_key=$1 AND user_id=$2", shortKey, ctx.Value(auth.UserIDKey))
+func (s StorageDB) Delete(ctx context.Context, shortKey string) error {
+    _, err := s.conn.ExecContext(ctx, "UPDATE storage SET is_deleted=true WHERE short_key=$1 AND user_id=$2", shortKey, ctx.Value(auth.UserIDKey))
+    if err != nil {
+        return err
+    }
+    return nil
 }

@@ -1,16 +1,18 @@
 package handlers
 
 import (
+	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
-	"testing"
 	"strings"
-	"io"
+	"testing"
 
+	"github.com/dsemenov12/shorturl/internal/config"
+	"github.com/dsemenov12/shorturl/internal/models"
+	"github.com/dsemenov12/shorturl/internal/storage/mocks"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
-	"github.com/dsemenov12/shorturl/internal/config"
-	"github.com/dsemenov12/shorturl/internal/storage/mocks"
 )
 
 func TestShortenBatchPost(t *testing.T) {
@@ -18,7 +20,7 @@ func TestShortenBatchPost(t *testing.T) {
 	defer ctrl.Finish()
 
 	// создаём объект-заглушку
-	m := mock_pg.NewMockStorage(ctrl)
+	m := mock_storage.NewMockStorage(ctrl)
 
 	m.EXPECT().Set(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 
@@ -50,16 +52,8 @@ func TestShortenBatchPost(t *testing.T) {
         		contentType: "application/json",
             },
         },
-		/*{
-            name: "negative test conflict",
-			body: `[{"correlation_id": "JJUQVrJ12","original_url": "https://practicum.yandex.ru/"},{"correlation_id": "JJUQVrJ22","original_url": "https://mail.ru/"}]`,
-            want: want{
-                code: http.StatusConflict,
-        		contentType: "application/json",
-            },
-        },*/
 		{
-            name: "negative test empty body",
+            name: "test empty body",
 			body: ``,
             want: want{
                 code: http.StatusBadRequest,
@@ -87,7 +81,7 @@ func TestShortenPost(t *testing.T) {
 	defer ctrl.Finish()
 
 	// создаём объект-заглушку
-	m := mock_pg.NewMockStorage(ctrl)
+	m := mock_storage.NewMockStorage(ctrl)
 
 	m.EXPECT().Set(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 
@@ -120,7 +114,7 @@ func TestShortenPost(t *testing.T) {
             },
         },
 		{
-            name: "negative test empty body",
+            name: "test empty body",
 			body: ``,
             want: want{
                 code: http.StatusBadRequest,
@@ -157,7 +151,7 @@ func TestPostURL(t *testing.T) {
 	defer ctrl.Finish()
 
 	// создаём объект-заглушку
-	m := mock_pg.NewMockStorage(ctrl)
+	m := mock_storage.NewMockStorage(ctrl)
 
 	m.EXPECT().Set(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 
@@ -190,7 +184,7 @@ func TestPostURL(t *testing.T) {
             },
         },
 		{
-            name: "negative test empty body",
+            name: "test empty body",
 			body: ``,
             want: want{
                 code: http.StatusBadRequest,
@@ -227,7 +221,7 @@ func TestRedirect(t *testing.T) {
 	defer ctrl.Finish()
 
 	// создаём объект-заглушку
-	m := mock_pg.NewMockStorage(ctrl)
+	m := mock_storage.NewMockStorage(ctrl)
 
 	m.EXPECT().Get(gomock.Any(), gomock.Any()).Return("bmXrsnZk", "https://practicum.yandex.ru/profile/go-advanced/", false, nil).AnyTimes()
 
@@ -286,14 +280,18 @@ func TestRedirect(t *testing.T) {
 }
 
 func TestUserUrls(t *testing.T) {
-	/*ctrl := gomock.NewController(t)
+	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	m := mock_pg.NewMockStorage(ctrl)
+	m := mock_storage.NewMockStorage(ctrl)
 
-	m.EXPECT().GetUserURL(gomock.Any()).Return("", nil).AnyTimes()
+	result := []models.ShortURLItem{}
+	result = append(result, models.ShortURLItem{
+		OriginalURL: "https://practicum.yandex.ru/",
+		ShortURL: "http://127.0.0.1:8080/qsd54gFg/gh5dEm34",
+	})
 
-    app := NewApp(m)
+	app := NewApp(m)
 
 	type want struct {
         code        int
@@ -310,21 +308,77 @@ func TestUserUrls(t *testing.T) {
         		contentType: "application/json",
             },
         },
+		{
+            name: "test not found",
+            want: want{
+                code: http.StatusNoContent,
+        		contentType: "application/json",
+            },
+        },
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			request := httptest.NewRequest(http.MethodGet, "/api/user/urls", strings.NewReader(""))
+			if test.want.code == http.StatusNoContent {
+				m.EXPECT().GetUserURL(gomock.Any()).Return(nil, errors.New("Not found"))
+			} else {
+				m.EXPECT().GetUserURL(gomock.Any()).Return(result, nil)
+			}
+
+			request := httptest.NewRequest(http.MethodGet, "/api/user/urls", nil)
 			response := httptest.NewRecorder()
 
-			app.PostURL(response, request)
+			app.UserUrls(response, request)
 
 			res := response.Result()
             
             assert.Equal(t, test.want.code, res.StatusCode)
 		})
-	}*/
+	}
 }
 
-func DeleteUserUrls(t *testing.T) {
-	
+func TestDeleteUserUrls(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	m := mock_storage.NewMockStorage(ctrl)
+
+	m.EXPECT().Delete(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+
+	app := NewApp(m)
+
+	type want struct {
+        code        int
+    }
+	tests := []struct {
+		name string
+		body string
+		want want
+	}{
+		{
+            name: "positive test #1",
+			body: `["JJUQVrJ12", "JJUQVrJ22", "Jlfd67ds", "cdpFuzqh"]`,
+            want: want{
+                code: http.StatusAccepted,
+            },
+        },
+		{
+            name: "test empty body",
+			body: ``,
+            want: want{
+                code: http.StatusBadRequest,
+            },
+        },
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			request := httptest.NewRequest(http.MethodDelete, "/api/user/urls", strings.NewReader(test.body))
+			response := httptest.NewRecorder()
+
+			app.DeleteUserUrls(response, request)
+
+			res := response.Result()
+            
+            assert.Equal(t, test.want.code, res.StatusCode)
+		})
+	}
 }

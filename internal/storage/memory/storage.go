@@ -3,7 +3,6 @@ package memory
 import (
 	"context"
 	"sync"
-	"database/sql"
 
 	"github.com/dsemenov12/shorturl/internal/filestorage"
 	"github.com/dsemenov12/shorturl/internal/models"
@@ -42,7 +41,7 @@ func (s *StorageMemory) GetUserURL(ctx context.Context) (result []models.ShortUR
     return nil, nil
 }
 
-func (s *StorageMemory) Delete(ctx context.Context, shortKey string) (result sql.Result, err error) {
+func (s *StorageMemory) Delete(ctx context.Context, shortKey string) (err error) {
 	delete(s.Data, shortKey)
-	return nil, nil
+	return nil
 }
