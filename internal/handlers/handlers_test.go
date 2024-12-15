@@ -330,6 +330,7 @@ func TestUserUrls(t *testing.T) {
 			app.UserUrls(response, request)
 
 			res := response.Result()
+            defer res.Body.Close()
             
             assert.Equal(t, test.want.code, res.StatusCode)
 		})
@@ -377,6 +378,7 @@ func TestDeleteUserUrls(t *testing.T) {
 			app.DeleteUserUrls(response, request)
 
 			res := response.Result()
+            defer res.Body.Close()
             
             assert.Equal(t, test.want.code, res.StatusCode)
 		})
