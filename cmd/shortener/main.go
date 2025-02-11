@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	_ "net/http/pprof"
 
 	"github.com/dsemenov12/shorturl/internal/config"
 	"github.com/dsemenov12/shorturl/internal/handlers"
@@ -37,6 +38,13 @@ func run() error {
     }
 
 	router := chi.NewRouter()
+
+    go func() {
+        logger.Log.Info("Starting pprof", zap.String("address", ":6060"))
+        if err := http.ListenAndServe(":6060", nil); err != nil {
+            logger.Log.Error("pprof server failed", zap.Error(err))
+        }
+    }()    
 
 	storage = memory.NewStorage()
     if config.FlagDatabaseDSN != "" {
