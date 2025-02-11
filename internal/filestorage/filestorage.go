@@ -12,7 +12,7 @@ import (
 )
 
 type ShortURLJSON struct {
-	UUID 	    string `json:"uuid"`
+	UUID        string `json:"uuid"`
 	ShortURL    string `json:"short_url"`
 	OriginalURL string `json:"original_url"`
 }
@@ -22,15 +22,15 @@ func Save(storageData map[string]string) error {
 	var data []byte
 
 	file, err := os.OpenFile(config.FlagFileStoragePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
-    if err != nil {
-        return err
-    }
+	if err != nil {
+		return err
+	}
 	defer file.Close()
 
 	for key, value := range storageData {
 		shortURLJSON := ShortURLJSON{
-			UUID: strconv.Itoa(iter),
-			ShortURL: key,
+			UUID:        strconv.Itoa(iter),
+			ShortURL:    key,
 			OriginalURL: value,
 		}
 
@@ -44,16 +44,16 @@ func Save(storageData map[string]string) error {
 	}
 
 	_, err = file.Write(data)
-    return err
+	return err
 }
 
 func Load(storage storage.Storage) error {
 	var shortURLJSON *ShortURLJSON
 
 	file, err := os.OpenFile(config.FlagFileStoragePath, os.O_RDONLY, 0666)
-    if err != nil {
-        return err
-    }
+	if err != nil {
+		return err
+	}
 	defer file.Close()
 
 	scanner := bufio.NewScanner(file)

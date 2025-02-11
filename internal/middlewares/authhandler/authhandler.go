@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/dsemenov12/shorturl/internal/auth"
+	"github.com/google/uuid"
 )
 
 func AuthHandle(handlerFunc http.HandlerFunc) http.HandlerFunc {
@@ -21,13 +21,13 @@ func AuthHandle(handlerFunc http.HandlerFunc) http.HandlerFunc {
 			if err != nil {
 				return
 			}
-        	cookie := &http.Cookie{
-				Name: "JWT",
-				Value: tokenString,
+			cookie := &http.Cookie{
+				Name:    "JWT",
+				Value:   tokenString,
 				Expires: time.Now().Add(24 * time.Hour),
-				Path: "/",
+				Path:    "/",
 			}
-		
+
 			http.SetCookie(w, cookie)
 		} else {
 			userID, err = auth.GetUserID(jwtToken.Value)
@@ -36,7 +36,7 @@ func AuthHandle(handlerFunc http.HandlerFunc) http.HandlerFunc {
 				return
 			}
 		}
-		
+
 		r = r.WithContext(context.WithValue(context.Background(), auth.UserIDKey, userID))
 
 		handlerFunc(w, r)

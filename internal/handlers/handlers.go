@@ -11,14 +11,14 @@ import (
 	"github.com/dsemenov12/shorturl/internal/config"
 	"github.com/dsemenov12/shorturl/internal/filestorage"
 	"github.com/dsemenov12/shorturl/internal/models"
-	"github.com/dsemenov12/shorturl/internal/storage"
 	"github.com/dsemenov12/shorturl/internal/rand"
+	"github.com/dsemenov12/shorturl/internal/storage"
 	"github.com/go-chi/chi/v5"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 type dataToFile struct {
-    Data map[string]string
+	Data map[string]string
 }
 
 type app struct {
@@ -26,7 +26,7 @@ type app struct {
 }
 
 func NewApp(storage storage.Storage) *app {
-    return &app{storage: storage}
+	return &app{storage: storage}
 }
 
 func (a *app) ShortenPost(res http.ResponseWriter, req *http.Request) {
@@ -67,10 +67,10 @@ func (a *app) ShortenPost(res http.ResponseWriter, req *http.Request) {
 	}
 
 	resp, err := json.MarshalIndent(result, "", "    ")
-    if err != nil {
-        http.Error(res, err.Error(), http.StatusInternalServerError)
-        return
-    }
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(status)
@@ -113,15 +113,15 @@ func (a *app) ShortenBatchPost(res http.ResponseWriter, req *http.Request) {
 
 		result = append(result, models.BatchResultItem{
 			CorrelationID: batchItem.CorrelationID,
-			ShortURL: shortURL,
+			ShortURL:      shortURL,
 		})
 	}
 
 	resp, err := json.MarshalIndent(result, "", "    ")
-    if err != nil {
-        http.Error(res, err.Error(), http.StatusInternalServerError)
-        return
-    }
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(status)
@@ -169,11 +169,11 @@ func (a *app) Redirect(res http.ResponseWriter, req *http.Request) {
 
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusNotFound)
-        return
+		return
 	}
 	if isDeleted {
 		http.Error(res, "", http.StatusGone)
-        return
+		return
 	}
 
 	http.Redirect(res, req, redirectLink, http.StatusTemporaryRedirect)
@@ -182,15 +182,15 @@ func (a *app) Redirect(res http.ResponseWriter, req *http.Request) {
 func (a *app) UserUrls(res http.ResponseWriter, req *http.Request) {
 	result, err := a.storage.GetUserURL(req.Context())
 	if err != nil {
-        http.Error(res, err.Error(), http.StatusNoContent)
+		http.Error(res, err.Error(), http.StatusNoContent)
 		return
-    }
+	}
 
 	resp, err := json.MarshalIndent(result, "", "    ")
-    if err != nil {
-        http.Error(res, err.Error(), http.StatusInternalServerError)
-        return
-    }
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusOK)
@@ -223,8 +223,8 @@ func (a *app) DeleteUserUrls(res http.ResponseWriter, req *http.Request) {
 	resultCh := a.delete(req.Context(), doneCh, inputCh)
 
 	for res := range resultCh {
-        fmt.Println(res)
-    }
+		fmt.Println(res)
+	}
 
 	res.WriteHeader(http.StatusAccepted)
 }
@@ -237,7 +237,7 @@ func (a *app) delete(ctx context.Context, doneCh chan struct{}, inputCh chan str
 
 		for data := range inputCh {
 			splitData := strings.Split(data, "/")
-			code := splitData[len(splitData) - 1]
+			code := splitData[len(splitData)-1]
 
 			a.storage.Delete(ctx, code)
 

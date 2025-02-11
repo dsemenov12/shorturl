@@ -14,7 +14,7 @@ func AuthCookieHandle(handlerFunc http.HandlerFunc) http.HandlerFunc {
 		if jwtToken == nil {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
-		} 
+		}
 
 		userID, err := auth.GetUserID(jwtToken.Value)
 		if err != nil || userID == "" {

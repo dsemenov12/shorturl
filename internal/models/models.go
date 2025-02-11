@@ -10,15 +10,15 @@ type ResultJSON struct {
 
 type BatchItem struct {
 	CorrelationID string `json:"correlation_id"`
-	OriginalURL string `json:"original_url"`
+	OriginalURL   string `json:"original_url"`
 }
 
 type BatchResultItem struct {
 	CorrelationID string `json:"correlation_id"`
-	ShortURL string `json:"short_url"`
+	ShortURL      string `json:"short_url"`
 }
 
 type ShortURLItem struct {
-	ShortURL string `json:"short_url"`
+	ShortURL    string `json:"short_url"`
 	OriginalURL string `json:"original_url"`
 }

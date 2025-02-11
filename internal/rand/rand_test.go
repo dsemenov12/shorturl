@@ -7,14 +7,14 @@ import (
 )
 
 func TestRandStringBytes(t *testing.T) {
-    type args struct {
-         n int
-    }
-    tests := []struct {
-        name string
-        args args
-    }{
-        {
+	type args struct {
+		n int
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		{
 			name: "positive test #1",
 			args: args{
 				n: 2,
@@ -32,11 +32,11 @@ func TestRandStringBytes(t *testing.T) {
 				n: 12,
 			},
 		},
-    }
-    for _, tt := range tests {
-        t.Run(tt.name, func(t *testing.T) {
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 			got := RandStringBytes(tt.args.n)
 			assert.Equal(t, len(got), tt.args.n)
-         })
-     }
+		})
+	}
 }
