@@ -1,24 +1,29 @@
 package models
 
+// InputData представляет входные данные с URL для сокращения.
 type InputData struct {
 	URL string `json:"url"`
 }
 
+// ResultJSON содержит результат операции по сокращению URL.
 type ResultJSON struct {
 	Result string `json:"result"`
 }
 
+// BatchItem представляет элемент запроса пакетной обработки URL.
 type BatchItem struct {
-	CorrelationID string `json:"correlation_id"`
-	OriginalURL   string `json:"original_url"`
+	CorrelationID string `json:"correlation_id"` // Уникальный идентификатор корреляции
+	OriginalURL   string `json:"original_url"`   // Исходный URL
 }
 
+// BatchResultItem содержит результат пакетной обработки URL.
 type BatchResultItem struct {
-	CorrelationID string `json:"correlation_id"`
-	ShortURL      string `json:"short_url"`
+	CorrelationID string `json:"correlation_id"` // Уникальный идентификатор корреляции
+	ShortURL      string `json:"short_url"`      // Сокращенный URL
 }
 
+// ShortURLItem представляет связь между сокращенным и исходным URL.
 type ShortURLItem struct {
-	ShortURL    string `json:"short_url"`
-	OriginalURL string `json:"original_url"`
+	ShortURL    string `json:"short_url"`    // Сокращенный URL
+	OriginalURL string `json:"original_url"` // Исходный URL
 }
