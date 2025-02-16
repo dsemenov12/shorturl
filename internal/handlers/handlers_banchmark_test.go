@@ -5,12 +5,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"testing"
 	"net/http/httptest"
+	"testing"
 
 	"github.com/dsemenov12/shorturl/internal/models"
-	"github.com/dsemenov12/shorturl/internal/storage/memory"
 	"github.com/dsemenov12/shorturl/internal/rand"
+	"github.com/dsemenov12/shorturl/internal/storage/memory"
 )
 
 // Бенчмарк для ShortenPost
