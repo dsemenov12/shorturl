@@ -2,6 +2,7 @@ package handlers_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -82,7 +83,7 @@ func ExampleApp_PostURL() {
 
 func ExampleApp_Redirect() {
 	store := memory.NewStorage()
-	store.Set(nil, "abc123", "https://example.com")
+	store.Set(context.TODO(), "abc123", "https://example.com")
 	app := handlers.NewApp(store)
 
 	req := httptest.NewRequest(http.MethodGet, "/abc123", nil)
@@ -111,8 +112,8 @@ func ExampleApp_UserUrls() {
 	fmt.Println(res.Body.String())
 
 	// Output:
-	// 200
-	// null
+	// 204
+	// No content
 }
 
 func ExampleApp_DeleteUserUrls() {
