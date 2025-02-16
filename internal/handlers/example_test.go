@@ -12,7 +12,7 @@ import (
 	"github.com/dsemenov12/shorturl/internal/storage/memory"
 )
 
-func ExampleShortenPost() {
+func ExampleApp_ShortenPost() {
 	store := memory.NewStorage()
 	app := handlers.NewApp(store)
 	reqBody := `{"url":"https://example.com"}`
@@ -32,7 +32,7 @@ func ExampleShortenPost() {
 	// 201
 }
 
-func ExampleShortenBatchPost() {
+func ExampleApp_ShortenBatchPost() {
 	store := memory.NewStorage()
 	app := handlers.NewApp(store)
 
@@ -63,7 +63,7 @@ func ExampleShortenBatchPost() {
 	// ]
 }
 
-func ExamplePostURL() {
+func ExampleApp_PostURL() {
 	store := memory.NewStorage()
 	app := handlers.NewApp(store)
 
@@ -80,7 +80,7 @@ func ExamplePostURL() {
 	// 201
 }
 
-func ExampleRedirect() {
+func ExampleApp_Redirect() {
 	store := memory.NewStorage()
 	store.Set(nil, "abc123", "https://example.com")
 	app := handlers.NewApp(store)
@@ -98,7 +98,7 @@ func ExampleRedirect() {
 	// /
 }
 
-func ExampleUserUrls() {
+func ExampleApp_UserUrls() {
 	store := memory.NewStorage()
 	app := handlers.NewApp(store)
 
@@ -115,7 +115,7 @@ func ExampleUserUrls() {
 	// null
 }
 
-func ExampleDeleteUserUrls() {
+func ExampleApp_DeleteUserUrls() {
 	store := memory.NewStorage()
 	app := handlers.NewApp(store)
 

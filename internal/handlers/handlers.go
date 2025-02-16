@@ -23,17 +23,17 @@ type dataToFile struct {
 }
 
 // app представляет основное приложение, которое взаимодействует с хранилищем.
-type app struct {
+type App struct {
 	storage storage.Storage
 }
 
 // NewApp создает новый экземпляр приложения.
-func NewApp(storage storage.Storage) *app {
-	return &app{storage: storage}
+func NewApp(storage storage.Storage) *App {
+	return &App{storage: storage}
 }
 
 // ShortenPost обрабатывает запрос на сокращение URL в формате JSON.
-func (a *app) ShortenPost(res http.ResponseWriter, req *http.Request) {
+func (a *App) ShortenPost(res http.ResponseWriter, req *http.Request) {
 	var inputDataValue models.InputData
 
 	shortKey := rand.RandStringBytes(8)
@@ -83,7 +83,7 @@ func (a *app) ShortenPost(res http.ResponseWriter, req *http.Request) {
 
 // ShortenBatchPost обрабатывает пакетное сокращение URL.
 // Ожидает массив объектов с исходными URL и возвращает массив с сокращёнными ссылками.
-func (a *app) ShortenBatchPost(res http.ResponseWriter, req *http.Request) {
+func (a *App) ShortenBatchPost(res http.ResponseWriter, req *http.Request) {
 	var batch []models.BatchItem
 	var result []models.BatchResultItem
 
@@ -136,7 +136,7 @@ func (a *app) ShortenBatchPost(res http.ResponseWriter, req *http.Request) {
 
 // PostURL обрабатывает сокращение URL, переданного в теле запроса.
 // Принимает URL в виде текста, сокращает его и возвращает короткую ссылку.
-func (a *app) PostURL(res http.ResponseWriter, req *http.Request) {
+func (a *App) PostURL(res http.ResponseWriter, req *http.Request) {
 	shortKey := rand.RandStringBytes(8)
 	shortURL := config.FlagBaseAddr + "/" + shortKey
 	status := http.StatusCreated
@@ -168,7 +168,7 @@ func (a *app) PostURL(res http.ResponseWriter, req *http.Request) {
 }
 
 // Redirect обрабатывает перенаправление по короткому URL.
-func (a *app) Redirect(res http.ResponseWriter, req *http.Request) {
+func (a *App) Redirect(res http.ResponseWriter, req *http.Request) {
 	shortKey := chi.URLParam(req, "id")
 
 	var redirectLink string
@@ -189,10 +189,14 @@ func (a *app) Redirect(res http.ResponseWriter, req *http.Request) {
 }
 
 // UserUrls возвращает список URL, сохраненных пользователем.
-func (a *app) UserUrls(res http.ResponseWriter, req *http.Request) {
+func (a *App) UserUrls(res http.ResponseWriter, req *http.Request) {
 	result, err := a.storage.GetUserURL(req.Context())
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusNoContent)
+		return
+	}
+	if len(result) == 0 {
+		http.Error(res, "No content", http.StatusNoContent)
 		return
 	}
 
@@ -212,7 +216,7 @@ func (a *app) UserUrls(res http.ResponseWriter, req *http.Request) {
 // Функция читает список коротких URL, передает их в канал для обработки
 // и запускает процесс удаления в фоне.
 // В случае успешного запуска удаления возвращает HTTP статус 202 (Accepted).
-func (a *app) DeleteUserUrls(res http.ResponseWriter, req *http.Request) {
+func (a *App) DeleteUserUrls(res http.ResponseWriter, req *http.Request) {
 	var shortKeys []string
 
 	body, err := io.ReadAll(req.Body)
@@ -244,7 +248,7 @@ func (a *app) DeleteUserUrls(res http.ResponseWriter, req *http.Request) {
 	res.WriteHeader(http.StatusAccepted)
 }
 
-func (a *app) delete(ctx context.Context, doneCh chan struct{}, inputCh chan string) chan string {
+func (a *App) delete(ctx context.Context, doneCh chan struct{}, inputCh chan string) chan string {
 	deleteRes := make(chan string)
 
 	go func() {
