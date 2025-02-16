@@ -11,12 +11,14 @@ import (
 	"github.com/dsemenov12/shorturl/internal/storage"
 )
 
+// ShortURLJSON представляет структуру данных для хранения сокращенного URL и его оригинала в JSON-формате.
 type ShortURLJSON struct {
-	UUID        string `json:"uuid"`
-	ShortURL    string `json:"short_url"`
-	OriginalURL string `json:"original_url"`
+	UUID        string `json:"uuid"`         // Уникальный идентификатор для записи
+	ShortURL    string `json:"short_url"`    // Сокращенный URL
+	OriginalURL string `json:"original_url"` // Оригинальный URL
 }
 
+// Save сохраняет данные о сокращенных URL в файл в формате JSON.
 func Save(storageData map[string]string) error {
 	var iter = 1
 	var data []byte
@@ -47,6 +49,7 @@ func Save(storageData map[string]string) error {
 	return err
 }
 
+// Load загружает данные из файла и сохраняет их в хранилище.
 func Load(storage storage.Storage) error {
 	var shortURLJSON *ShortURLJSON
 

@@ -5,12 +5,28 @@ import (
 	"os"
 )
 
-var FlagRunAddr string
-var FlagBaseAddr string
-var FlagLogLevel string
-var FlagFileStoragePath string
-var FlagDatabaseDSN string
+// Флаги конфигурации для приложения, которые могут быть переданы через командную строку или переменные окружения.
+// Эти флаги используются для настройки параметров, таких как адрес сервера, базовый URL, уровень логирования и другие.
 
+var (
+	// FlagRunAddr указывает адрес и порт, на котором должен запускаться HTTP-сервер.
+	FlagRunAddr string
+
+	// FlagBaseAddr указывает базовый адрес, который используется для формирования сокращенных URL.
+	FlagBaseAddr string
+
+	// FlagLogLevel указывает уровень логирования (например, "debug", "info", "warn", "error").
+	FlagLogLevel string
+
+	// FlagFileStoragePath указывает путь к файлу, в который сохраняются данные в формате JSON.
+	FlagFileStoragePath string
+
+	// FlagDatabaseDSN указывает строку подключения к базе данных.
+	FlagDatabaseDSN string
+)
+
+// ParseFlags анализирует флаги командной строки и переменные окружения,
+// чтобы установить значения для соответствующих переменных конфигурации.
 func ParseFlags() {
 	flag.StringVar(&FlagRunAddr, "a", "127.0.0.1:8080", "адрес запуска HTTP-сервера")
 	flag.StringVar(&FlagBaseAddr, "b", "http://127.0.0.1:8080/qsd54gFg", "базовый адрес результирующего сокращённого URL")
