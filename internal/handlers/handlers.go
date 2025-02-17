@@ -11,25 +11,29 @@ import (
 	"github.com/dsemenov12/shorturl/internal/config"
 	"github.com/dsemenov12/shorturl/internal/filestorage"
 	"github.com/dsemenov12/shorturl/internal/models"
-	"github.com/dsemenov12/shorturl/internal/storage"
 	"github.com/dsemenov12/shorturl/internal/rand"
+	"github.com/dsemenov12/shorturl/internal/storage"
 	"github.com/go-chi/chi/v5"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
+// dataToFile представляет структуру для хранения данных в файле.
 type dataToFile struct {
-    Data map[string]string
+	Data map[string]string
 }
 
-type app struct {
+// app представляет основное приложение, которое взаимодействует с хранилищем.
+type App struct {
 	storage storage.Storage
 }
 
-func NewApp(storage storage.Storage) *app {
-    return &app{storage: storage}
+// NewApp создает новый экземпляр приложения.
+func NewApp(storage storage.Storage) *App {
+	return &App{storage: storage}
 }
 
-func (a *app) ShortenPost(res http.ResponseWriter, req *http.Request) {
+// ShortenPost обрабатывает запрос на сокращение URL в формате JSON.
+func (a *App) ShortenPost(res http.ResponseWriter, req *http.Request) {
 	var inputDataValue models.InputData
 
 	shortKey := rand.RandStringBytes(8)
@@ -67,17 +71,19 @@ func (a *app) ShortenPost(res http.ResponseWriter, req *http.Request) {
 	}
 
 	resp, err := json.MarshalIndent(result, "", "    ")
-    if err != nil {
-        http.Error(res, err.Error(), http.StatusInternalServerError)
-        return
-    }
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(status)
 	res.Write(resp)
 }
 
-func (a *app) ShortenBatchPost(res http.ResponseWriter, req *http.Request) {
+// ShortenBatchPost обрабатывает пакетное сокращение URL.
+// Ожидает массив объектов с исходными URL и возвращает массив с сокращёнными ссылками.
+func (a *App) ShortenBatchPost(res http.ResponseWriter, req *http.Request) {
 	var batch []models.BatchItem
 	var result []models.BatchResultItem
 
@@ -113,22 +119,24 @@ func (a *app) ShortenBatchPost(res http.ResponseWriter, req *http.Request) {
 
 		result = append(result, models.BatchResultItem{
 			CorrelationID: batchItem.CorrelationID,
-			ShortURL: shortURL,
+			ShortURL:      shortURL,
 		})
 	}
 
 	resp, err := json.MarshalIndent(result, "", "    ")
-    if err != nil {
-        http.Error(res, err.Error(), http.StatusInternalServerError)
-        return
-    }
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(status)
 	res.Write(resp)
 }
 
-func (a *app) PostURL(res http.ResponseWriter, req *http.Request) {
+// PostURL обрабатывает сокращение URL, переданного в теле запроса.
+// Принимает URL в виде текста, сокращает его и возвращает короткую ссылку.
+func (a *App) PostURL(res http.ResponseWriter, req *http.Request) {
 	shortKey := rand.RandStringBytes(8)
 	shortURL := config.FlagBaseAddr + "/" + shortKey
 	status := http.StatusCreated
@@ -159,7 +167,8 @@ func (a *app) PostURL(res http.ResponseWriter, req *http.Request) {
 	res.Write([]byte(shortURL))
 }
 
-func (a *app) Redirect(res http.ResponseWriter, req *http.Request) {
+// Redirect обрабатывает перенаправление по короткому URL.
+func (a *App) Redirect(res http.ResponseWriter, req *http.Request) {
 	shortKey := chi.URLParam(req, "id")
 
 	var redirectLink string
@@ -169,35 +178,45 @@ func (a *app) Redirect(res http.ResponseWriter, req *http.Request) {
 
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusNotFound)
-        return
+		return
 	}
 	if isDeleted {
 		http.Error(res, "", http.StatusGone)
-        return
+		return
 	}
 
 	http.Redirect(res, req, redirectLink, http.StatusTemporaryRedirect)
 }
 
-func (a *app) UserUrls(res http.ResponseWriter, req *http.Request) {
+// UserUrls возвращает список URL, сохраненных пользователем.
+func (a *App) UserUrls(res http.ResponseWriter, req *http.Request) {
 	result, err := a.storage.GetUserURL(req.Context())
 	if err != nil {
-        http.Error(res, err.Error(), http.StatusNoContent)
+		http.Error(res, err.Error(), http.StatusNoContent)
 		return
-    }
+	}
+	if len(result) == 0 {
+		http.Error(res, "No content", http.StatusNoContent)
+		return
+	}
 
 	resp, err := json.MarshalIndent(result, "", "    ")
-    if err != nil {
-        http.Error(res, err.Error(), http.StatusInternalServerError)
-        return
-    }
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusOK)
 	res.Write(resp)
 }
 
-func (a *app) DeleteUserUrls(res http.ResponseWriter, req *http.Request) {
+// DeleteUserUrls обрабатывает запрос на удаление списка сокращенных URL-адресов,
+// полученного в теле запроса в формате JSON.
+// Функция читает список коротких URL, передает их в канал для обработки
+// и запускает процесс удаления в фоне.
+// В случае успешного запуска удаления возвращает HTTP статус 202 (Accepted).
+func (a *App) DeleteUserUrls(res http.ResponseWriter, req *http.Request) {
 	var shortKeys []string
 
 	body, err := io.ReadAll(req.Body)
@@ -223,13 +242,13 @@ func (a *app) DeleteUserUrls(res http.ResponseWriter, req *http.Request) {
 	resultCh := a.delete(req.Context(), doneCh, inputCh)
 
 	for res := range resultCh {
-        fmt.Println(res)
-    }
+		fmt.Println(res)
+	}
 
 	res.WriteHeader(http.StatusAccepted)
 }
 
-func (a *app) delete(ctx context.Context, doneCh chan struct{}, inputCh chan string) chan string {
+func (a *App) delete(ctx context.Context, doneCh chan struct{}, inputCh chan string) chan string {
 	deleteRes := make(chan string)
 
 	go func() {
@@ -237,7 +256,7 @@ func (a *app) delete(ctx context.Context, doneCh chan struct{}, inputCh chan str
 
 		for data := range inputCh {
 			splitData := strings.Split(data, "/")
-			code := splitData[len(splitData) - 1]
+			code := splitData[len(splitData)-1]
 
 			a.storage.Delete(ctx, code)
 
