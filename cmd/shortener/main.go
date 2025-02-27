@@ -21,7 +21,16 @@ import (
 	"go.uber.org/zap"
 )
 
+// Глобальные переменные для информации о сборке
+var (
+	buildVersion = "N/A"
+	buildDate    = "N/A"
+	buildCommit  = "N/A"
+)
+
 func main() {
+	printBuildData()
+
 	if error := run(); error != nil {
 		fmt.Println(error)
 	}
@@ -91,4 +100,11 @@ func run() error {
 	}
 
 	return nil
+}
+
+// printBuildData - вывод информации о сборке.
+func printBuildData() {
+	fmt.Println("Build version:", buildVersion)
+	fmt.Println("Build date:", buildDate)
+	fmt.Println("Build commit:", buildCommit)
 }
