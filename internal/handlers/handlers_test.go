@@ -223,8 +223,6 @@ func TestRedirect(t *testing.T) {
 	// создаём объект-заглушку
 	m := mock_storage.NewMockStorage(ctrl)
 
-	m.EXPECT().Get(gomock.Any(), gomock.Any()).Return("bmXrsnZk", "https://practicum.yandex.ru/profile/go-advanced/", false, nil).AnyTimes()
-
 	// создадим экземпляр приложения и передадим ему «хранилище»
 	app := NewApp(m)
 
@@ -261,10 +259,32 @@ func TestRedirect(t *testing.T) {
 				redirectURL: "https://practicum.yandex.ru/profile/",
 			},
 		},
+		{
+			name: "error not found test",
+			code: "CztkzbdO124",
+			want: want{
+				code: http.StatusNotFound,
+			},
+		},
+		{
+			name: "error status gone test",
+			code: "Cztkz4dO12",
+			want: want{
+				code: http.StatusGone,
+			},
+		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			if test.want.code == http.StatusNotFound {
+				m.EXPECT().Get(gomock.Any(), gomock.Any()).Return("", "", false, errors.New("not found"))
+			} else if test.want.code == http.StatusGone {
+				m.EXPECT().Get(gomock.Any(), gomock.Any()).Return("", "", true, nil)
+			} else {
+				m.EXPECT().Get(gomock.Any(), gomock.Any()).Return("bmXrsnZk", "https://practicum.yandex.ru/profile/go-advanced/", false, nil)
+			}
+
 			requestURL := config.FlagBaseAddr + "/" + test.code
 			request := httptest.NewRequest(http.MethodGet, requestURL, nil)
 			response := httptest.NewRecorder()
