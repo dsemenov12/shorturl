@@ -82,6 +82,15 @@ func run() error {
 	if err = logger.Initialize(config.FlagLogLevel); err != nil {
 		return err
 	}
+
+	if config.FlagEnableHTTPS {
+		certFile := "cert.pem"
+		keyFile := "key.pem"
+
+		logger.Log.Info("Starting HTTPS server", zap.String("address", config.FlagRunAddr))
+		return http.ListenAndServeTLS(config.FlagRunAddr, certFile, keyFile, gziphandler.GzipHandle(router))
+	}
+
 	logger.Log.Info("Running server", zap.String("address", config.FlagRunAddr))
 
 	router.Post("/", logger.RequestLogger(authhandler.AuthHandle(app.PostURL)))

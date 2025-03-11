@@ -3,6 +3,7 @@ package config
 import (
 	"flag"
 	"os"
+	"strconv"
 )
 
 // Флаги конфигурации для приложения, которые могут быть переданы через командную строку или переменные окружения.
@@ -22,6 +23,9 @@ var (
 
 	// FlagDatabaseDSN указывает строку подключения к базе данных.
 	FlagDatabaseDSN string
+
+	// FlagEnableHTTPS включает HTTPS в веб-сервере.
+	FlagEnableHTTPS bool
 )
 
 // ParseFlags анализирует флаги командной строки и переменные окружения,
@@ -32,6 +36,7 @@ func ParseFlags() {
 	flag.StringVar(&FlagLogLevel, "l", "info", "log level")
 	flag.StringVar(&FlagFileStoragePath, "f", "tmp/storage.json", "путь до файла, куда сохраняются данные в формате JSON")
 	flag.StringVar(&FlagDatabaseDSN, "d", "", "адрес подключения к БД")
+	flag.BoolVar(&FlagEnableHTTPS, "s", false, "включение HTTPS в веб-сервере")
 
 	flag.Parse()
 
@@ -46,5 +51,10 @@ func ParseFlags() {
 	}
 	if envDatabaseDSN := os.Getenv("DATABASE_DSN"); envDatabaseDSN != "" {
 		FlagDatabaseDSN = envDatabaseDSN
+	}
+	if envEnableHTTPS := os.Getenv("ENABLE_HTTPS"); envEnableHTTPS != "" {
+		if val, err := strconv.ParseBool(envEnableHTTPS); err == nil {
+			FlagEnableHTTPS = val
+		}
 	}
 }
