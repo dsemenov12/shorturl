@@ -2,11 +2,44 @@ package config
 
 import (
 	"flag"
+	"io/ioutil"
 	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
+
+// Тест загрузки конфигурации из JSON-файла
+func TestParseFlags_ConfigFile(t *testing.T) {
+	// Создаем временный конфигурационный файл
+	configJSON := `{
+		"server_address": "192.168.1.100:9090",
+		"base_url": "http://192.168.1.100:9090/qsd54gFg",
+		"file_storage_path": "/tmp/config_storage.json",
+		"database_dsn": "postgres://user:password@localhost/db",
+		"enable_https": true
+	}`
+	tempFile, err := ioutil.TempFile("", "config.json")
+	assert.NoError(t, err)
+	defer os.Remove(tempFile.Name())
+
+	_, err = tempFile.Write([]byte(configJSON))
+	assert.NoError(t, err)
+	tempFile.Close()
+
+	// Устанавливаем путь к конфигурационному файлу
+	os.Args = []string{"cmd", "-c", tempFile.Name()}
+	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
+
+	// Парсим флаги
+	ParseFlags()
+
+	// Проверяем, что параметры установлены из файла конфигурации
+	assert.Equal(t, "http://127.0.0.1:8080/qsd54gFg", FlagBaseAddr)
+	assert.Equal(t, "/tmp/config_storage.json", FlagFileStoragePath)
+	assert.Equal(t, "postgres://user:password@localhost/db", FlagDatabaseDSN)
+	assert.True(t, FlagEnableHTTPS)
+}
 
 // Тестируем ParseFlags с флагами командной строки
 func TestParseFlags_CommandLineFlags(t *testing.T) {
