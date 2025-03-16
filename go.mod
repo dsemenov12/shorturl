@@ -1,8 +1,8 @@
 module github.com/dsemenov12/shorturl
 
-go 1.23
+go 1.22
 
-toolchain go1.23.0
+toolchain go1.22.0
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.2
