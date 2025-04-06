@@ -2,7 +2,6 @@ package config
 
 import (
 	"flag"
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -19,7 +18,7 @@ func TestParseFlags_ConfigFile(t *testing.T) {
 		"database_dsn": "postgres://user:password@localhost/db",
 		"enable_https": true
 	}`
-	tempFile, err := ioutil.TempFile("", "config.json")
+	tempFile, err := os.CreateTemp("", "config.json")
 	assert.NoError(t, err)
 	defer os.Remove(tempFile.Name())
 
