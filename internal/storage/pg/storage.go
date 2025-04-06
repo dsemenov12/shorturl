@@ -112,3 +112,24 @@ func (s StorageDB) Delete(ctx context.Context, shortKey string) error {
 	}
 	return nil
 }
+
+// CountURLs возвращает количество уникальных URL в базе данных.
+func (s StorageDB) CountURLs(ctx context.Context) (int, error) {
+	var count int
+	err := s.conn.QueryRowContext(ctx, "SELECT COUNT(*) FROM storage WHERE is_deleted=false").Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
+}
+
+// CountUsers возвращает количество уникальных пользователей в базе данных.
+func (s StorageDB) CountUsers(ctx context.Context) (int, error) {
+	var count int
+	err := s.conn.QueryRowContext(ctx, "SELECT COUNT(DISTINCT user_id) FROM storage").Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}

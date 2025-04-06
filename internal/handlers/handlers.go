@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"strings"
 
@@ -246,6 +247,53 @@ func (a *App) DeleteUserUrls(res http.ResponseWriter, req *http.Request) {
 	}
 
 	res.WriteHeader(http.StatusAccepted)
+}
+
+// InternalStats обрабатывает запрос статистики.
+func (a *App) InternalStats(res http.ResponseWriter, req *http.Request) {
+	trustedSubnet := config.FlagTrustedSubnet
+	if trustedSubnet == "" {
+		http.Error(res, "access forbidden", http.StatusForbidden)
+		return
+	}
+
+	clientIP := req.Header.Get("X-Real-IP")
+	if clientIP == "" {
+		http.Error(res, "missing X-Real-IP header", http.StatusForbidden)
+		return
+	}
+
+	_, subnet, err := net.ParseCIDR(trustedSubnet)
+	if err != nil {
+		http.Error(res, "invalid subnet configuration", http.StatusInternalServerError)
+		return
+	}
+
+	parsedIP := net.ParseIP(clientIP)
+	if parsedIP == nil || !subnet.Contains(parsedIP) {
+		http.Error(res, "access forbidden", http.StatusForbidden)
+		return
+	}
+
+	countUrls, err := a.storage.CountURLs(req.Context())
+	if err != nil {
+		http.Error(res, "error", http.StatusBadRequest)
+		return
+	}
+	countUsers, err := a.storage.CountURLs(req.Context())
+	if err != nil {
+		http.Error(res, "error", http.StatusBadRequest)
+		return
+	}
+
+	stats := models.StatsResponse{
+		URLs:  countUrls,
+		Users: countUsers,
+	}
+
+	res.Header().Set("Content-Type", "application/json")
+	res.WriteHeader(http.StatusOK)
+	json.NewEncoder(res).Encode(stats)
 }
 
 func (a *App) delete(ctx context.Context, doneCh chan struct{}, inputCh chan string) chan string {

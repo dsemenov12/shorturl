@@ -27,3 +27,9 @@ type ShortURLItem struct {
 	ShortURL    string `json:"short_url"`    // Сокращенный URL
 	OriginalURL string `json:"original_url"` // Исходный URL
 }
+
+// StatsResponse представляет JSON-ответ для эндпоинта /api/internal/stats.
+type StatsResponse struct {
+	URLs  int `json:"urls"`
+	Users int `json:"users"`
+}

@@ -30,6 +30,9 @@ var (
 
 	// FlagConfigFilePath путь к файлу конфигурации.
 	FlagConfigFilePath string
+
+	// FlagTrustedSubnet указывает доверенную подсеть в формате CIDR.
+	FlagTrustedSubnet string
 )
 
 // Config структура для JSON-конфигурации
@@ -39,6 +42,7 @@ type Config struct {
 	FileStoragePath string `json:"file_storage_path"`
 	DatabaseDSN     string `json:"database_dsn"`
 	EnableHTTPS     bool   `json:"enable_https"`
+	TrustedSubnet   string `json:"trusted_subnet"`
 }
 
 // ParseFlags анализирует флаги командной строки и переменные окружения,
@@ -52,6 +56,7 @@ func ParseFlags() {
 	flag.BoolVar(&FlagEnableHTTPS, "s", false, "включение HTTPS в веб-сервере")
 	flag.StringVar(&FlagConfigFilePath, "c", "", "путь до JSON-файла конфигурации")
 	flag.StringVar(&FlagConfigFilePath, "config", "", "путь до JSON-файла конфигурации (аналог -c)")
+	flag.StringVar(&FlagTrustedSubnet, "t", "", "доверенная подсеть в формате CIDR")
 
 	flag.Parse()
 
@@ -74,6 +79,9 @@ func ParseFlags() {
 	}
 	if envConfigFilePath := os.Getenv("CONFIG"); envConfigFilePath != "" {
 		FlagConfigFilePath = envConfigFilePath
+	}
+	if envTrustedSubnet := os.Getenv("TRUSTED_SUBNET"); envTrustedSubnet != "" {
+		FlagTrustedSubnet = envTrustedSubnet
 	}
 
 	if FlagConfigFilePath != "" {
@@ -110,5 +118,8 @@ func loadConfigFromFile(path string) {
 	}
 	if !FlagEnableHTTPS { // Если по умолчанию false, заменяем значением из конфига
 		FlagEnableHTTPS = cfg.EnableHTTPS
+	}
+	if FlagTrustedSubnet == "" {
+		FlagTrustedSubnet = cfg.TrustedSubnet
 	}
 }

@@ -96,6 +96,7 @@ func run() error {
 	router.Get(baseURL.Path+"/{id}", logger.RequestLogger(app.Redirect))
 	router.Get("/api/user/urls", logger.RequestLogger(authhandler.AuthHandle(app.UserUrls)))
 	router.Delete("/api/user/urls", logger.RequestLogger(authcookiehandler.AuthCookieHandle(app.DeleteUserUrls)))
+	router.Get("/api/internal/stats", logger.RequestLogger(app.InternalStats))
 
 	server := &http.Server{
 		Addr:    config.FlagRunAddr,
