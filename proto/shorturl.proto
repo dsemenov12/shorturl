@@ -1,0 +1,69 @@
+syntax = "proto3";
+
+package shorturl;
+
+option go_package = "shorturl/proto";
+
+message ShortenRequest {
+    string url = 1;
+}
+
+message ShortenResponse {
+    string result = 1;
+}
+
+message ShortenBatchItem {
+    string correlation_id = 1;
+    string original_url = 2;
+}
+
+message ShortenBatchResponseItem {
+    string correlation_id = 1;
+    string short_url = 2;
+}
+
+message ShortenBatchRequest {
+    repeated ShortenBatchItem items = 1;
+}
+
+message ShortenBatchResponse {
+    repeated ShortenBatchResponseItem items = 1;
+}
+
+message URL {
+    string short_url = 1;
+    string original_url = 2;
+}
+
+message UserUrlsResponse {
+    repeated URL urls = 1;
+}
+
+message DeleteUserUrlsRequest {
+    repeated string short_urls = 1;
+}
+
+message Empty {}
+
+message StatsResponse {
+    int64 urls = 1;
+    int64 users = 2;
+}
+
+message RedirectRequest {
+    string id = 1;
+}
+
+message RedirectResponse {
+    string url = 1;
+}
+
+service ShortenerService {
+    rpc PostURL(ShortenRequest) returns (ShortenResponse);
+    rpc ShortenPost(ShortenRequest) returns (ShortenResponse);
+    rpc ShortenBatchPost(ShortenBatchRequest) returns (ShortenBatchResponse);
+    rpc Redirect(RedirectRequest) returns (RedirectResponse);
+    rpc UserUrls(Empty) returns (UserUrlsResponse);
+    rpc DeleteUserUrls(DeleteUserUrlsRequest) returns (Empty);
+    rpc InternalStats(Empty) returns (StatsResponse);
+}

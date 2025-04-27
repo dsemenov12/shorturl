@@ -4,14 +4,17 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net"
 	"net/http"
 	_ "net/http/pprof"
 	"net/url"
+	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
 	"github.com/dsemenov12/shorturl/internal/config"
+	gRPCHandlers "github.com/dsemenov12/shorturl/internal/grpc/handlers"
 	"github.com/dsemenov12/shorturl/internal/handlers"
 	"github.com/dsemenov12/shorturl/internal/middlewares/authcookiehandler"
 	"github.com/dsemenov12/shorturl/internal/middlewares/authhandler"
@@ -20,8 +23,10 @@ import (
 	"github.com/dsemenov12/shorturl/internal/storage"
 	"github.com/dsemenov12/shorturl/internal/storage/memory"
 	"github.com/dsemenov12/shorturl/internal/storage/pg"
+	"github.com/dsemenov12/shorturl/proto"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
 )
 
 // Глобальные переменные для информации о сборке
@@ -97,6 +102,23 @@ func run() error {
 	router.Get("/api/user/urls", logger.RequestLogger(authhandler.AuthHandle(app.UserUrls)))
 	router.Delete("/api/user/urls", logger.RequestLogger(authcookiehandler.AuthCookieHandle(app.DeleteUserUrls)))
 	router.Get("/api/internal/stats", logger.RequestLogger(app.InternalStats))
+
+	grpcServer := grpc.NewServer()
+	proto.RegisterShortenerServiceServer(grpcServer, &gRPCHandlers.GRPCServer{Storage: storage})
+
+	go func() {
+		lis, err := net.Listen("tcp", config.FlagRunAddr)
+		if err != nil {
+			fmt.Println("failed to listen:", err)
+			os.Exit(1)
+		}
+
+		fmt.Println("gRPC server running at", config.FlagRunAddr)
+		if err := grpcServer.Serve(lis); err != nil {
+			fmt.Println("failed to serve gRPC:", err)
+			os.Exit(1)
+		}
+	}()
 
 	server := &http.Server{
 		Addr:    config.FlagRunAddr,
