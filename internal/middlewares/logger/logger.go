@@ -2,13 +2,17 @@ package logger
 
 import (
 	"net/http"
+	"sync"
 	"time"
 
 	"go.uber.org/zap"
 )
 
-// Log является глобальной переменной для логгера, инициализированного с помощью пакета zap.
-var Log *zap.Logger = zap.NewNop()
+var (
+	// Log является глобальной переменной для логгера, инициализированного с помощью пакета zap.
+	Log  *zap.Logger = zap.NewNop()
+	once sync.Once
+)
 
 type (
 	// Структура responseData хранит информацию о статусе и размере HTTP-ответа.
@@ -41,20 +45,18 @@ func (r *loggingResponseWriter) WriteHeader(statusCode int) {
 // Принимает строковое значение уровня логирования (например, "debug", "info", "error").
 // Возвращает ошибку, если уровень не может быть разобран или если возникли проблемы при создании логгера.
 func Initialize(level string) error {
-	lvl, err := zap.ParseAtomicLevel(level)
-	if err != nil {
-		return err
-	}
+	var err error
 
-	cfg := zap.NewProductionConfig()
-	cfg.Level = lvl
-	zl, err := cfg.Build()
-	if err != nil {
-		return err
-	}
+	once.Do(func() {
+		var zl *zap.Logger
+		zl, err = buildLogger(level)
+		if err != nil {
+			return
+		}
+		Log = zl
+	})
 
-	Log = zl
-	return nil
+	return err
 }
 
 // RequestLogger является middleware для логирования информации о входящих HTTP-запросах и их ответах.
@@ -89,4 +91,16 @@ func RequestLogger(handlerFunc http.HandlerFunc) http.HandlerFunc {
 			zap.Int("size", responseData.size),
 		)
 	})
+}
+
+// buildLogger создаёт zap.Logger по заданному уровню логирования.
+func buildLogger(level string) (*zap.Logger, error) {
+	lvl, err := zap.ParseAtomicLevel(level)
+	if err != nil {
+		return nil, err
+	}
+
+	cfg := zap.NewProductionConfig()
+	cfg.Level = lvl
+	return cfg.Build()
 }

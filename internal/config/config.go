@@ -13,6 +13,9 @@ var (
 	// FlagRunAddr указывает адрес и порт, на котором должен запускаться HTTP-сервер.
 	FlagRunAddr string
 
+	// FlagGRPCAddr указывает адрес и порт, на котором должен запускаться gRPC сервер.
+	FlagRunGRPCAddr string
+
 	// FlagBaseAddr указывает базовый адрес, который используется для формирования сокращенных URL.
 	FlagBaseAddr string
 
@@ -37,18 +40,20 @@ var (
 
 // Config структура для JSON-конфигурации
 type Config struct {
-	ServerAddress   string `json:"server_address"`
-	BaseURL         string `json:"base_url"`
-	FileStoragePath string `json:"file_storage_path"`
-	DatabaseDSN     string `json:"database_dsn"`
-	EnableHTTPS     bool   `json:"enable_https"`
-	TrustedSubnet   string `json:"trusted_subnet"`
+	ServerAddress     string `json:"server_address"`
+	ServerGRPCAddress string `json:"server_grpc_address"`
+	BaseURL           string `json:"base_url"`
+	FileStoragePath   string `json:"file_storage_path"`
+	DatabaseDSN       string `json:"database_dsn"`
+	EnableHTTPS       bool   `json:"enable_https"`
+	TrustedSubnet     string `json:"trusted_subnet"`
 }
 
 // ParseFlags анализирует флаги командной строки и переменные окружения,
 // чтобы установить значения для соответствующих переменных конфигурации.
 func ParseFlags() {
 	flag.StringVar(&FlagRunAddr, "a", "127.0.0.1:8080", "адрес запуска HTTP-сервера")
+	flag.StringVar(&FlagRunGRPCAddr, "g", "127.0.0.1:8081", "адрес запуска gRPC сервера")
 	flag.StringVar(&FlagBaseAddr, "b", "http://127.0.0.1:8080/qsd54gFg", "базовый адрес результирующего сокращённого URL")
 	flag.StringVar(&FlagLogLevel, "l", "info", "log level")
 	flag.StringVar(&FlagFileStoragePath, "f", "tmp/storage.json", "путь до файла, куда сохраняются данные в формате JSON")
@@ -62,6 +67,9 @@ func ParseFlags() {
 
 	if envRunAddr := os.Getenv("SERVER_ADDRESS"); envRunAddr != "" {
 		FlagRunAddr = envRunAddr
+	}
+	if envRunGrpcAddr := os.Getenv("SERVER_GRPC_ADDRESS"); envRunGrpcAddr != "" {
+		FlagRunGRPCAddr = envRunGrpcAddr
 	}
 	if envBaseAddr := os.Getenv("BASE_URL"); envBaseAddr != "" {
 		FlagBaseAddr = envBaseAddr
@@ -106,6 +114,9 @@ func loadConfigFromFile(path string) {
 	// Устанавливаем значения из файла, только если они не переопределены
 	if FlagRunAddr == "127.0.0.1:8080" {
 		FlagRunAddr = cfg.ServerAddress
+	}
+	if FlagRunGRPCAddr == "127.0.0.1:8081" {
+		FlagRunGRPCAddr = cfg.ServerGRPCAddress
 	}
 	if FlagBaseAddr == "http://127.0.0.1:8080" {
 		FlagBaseAddr = cfg.BaseURL

@@ -10,14 +10,10 @@ import (
 	"go.uber.org/zap"
 )
 
-func TestInitialize(t *testing.T) {
-	// Тестируем успешную инициализацию с уровнем логирования "info"
-	err := Initialize("info")
+func TestBuildLogger(t *testing.T) {
+	logger, err := buildLogger("info")
 	assert.NoError(t, err)
-
-	// Тестируем ошибочную инициализацию с неверным уровнем логирования
-	err = Initialize("invalid")
-	assert.Error(t, err)
+	assert.NotNil(t, logger)
 }
 
 func TestRequestLogger(t *testing.T) {

@@ -107,15 +107,15 @@ func run() error {
 	proto.RegisterShortenerServiceServer(grpcServer, &gRPCHandlers.GRPCServer{Storage: storage})
 
 	go func() {
-		lis, err := net.Listen("tcp", config.FlagRunAddr)
+		lis, err := net.Listen("tcp", config.FlagRunGRPCAddr)
 		if err != nil {
-			fmt.Println("failed to listen:", err)
+			logger.Log.Fatal("Failed to listen", zap.Error(err))
 			os.Exit(1)
 		}
 
-		fmt.Println("gRPC server running at", config.FlagRunAddr)
+		logger.Log.Info("gRPC server running at", zap.String("address", config.FlagRunGRPCAddr))
 		if err := grpcServer.Serve(lis); err != nil {
-			fmt.Println("failed to serve gRPC:", err)
+			logger.Log.Fatal("Failed to serve gRPC", zap.Error(err))
 			os.Exit(1)
 		}
 	}()
