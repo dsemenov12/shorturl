@@ -74,6 +74,45 @@ func (s *GRPCServer) Redirect(ctx context.Context, req *proto.RedirectRequest) (
 	}, nil
 }
 
+// UserUrls возвращает список URL, сохранённых пользователем.
+func (s *GRPCServer) UserUrls(ctx context.Context, _ *proto.Empty) (*proto.UserUrlsResponse, error) {
+	urls, err := s.Storage.GetUserURL(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to retrieve user URLs: %v", err)
+	}
+
+	if len(urls) == 0 {
+		return &proto.UserUrlsResponse{Urls: []*proto.URL{}}, nil
+	}
+
+	var response []*proto.URL
+	for _, u := range urls {
+		response = append(response, &proto.URL{
+			ShortUrl:    u.ShortURL,
+			OriginalUrl: u.OriginalURL,
+		})
+	}
+
+	return &proto.UserUrlsResponse{
+		Urls: response,
+	}, nil
+}
+
+// DeleteUserUrls удаляет список сокращенных URL, предоставленных пользователем.
+func (s *GRPCServer) DeleteUserUrls(ctx context.Context, req *proto.DeleteUserUrlsRequest) (*proto.Empty, error) {
+	if len(req.ShortUrls) == 0 {
+		return nil, status.Errorf(codes.InvalidArgument, "no URLs provided to delete")
+	}
+	for _, shortURL := range req.ShortUrls {
+		err := s.Storage.Delete(ctx, shortURL)
+		if err != nil {
+			return nil, status.Errorf(codes.Internal, "failed to delete URL %s: %v", shortURL, err)
+		}
+	}
+
+	return &proto.Empty{}, nil
+}
+
 // InternalStats возвращает статистику по количеству пользователей и URL.
 func (s *GRPCServer) InternalStats(ctx context.Context, req *proto.Empty) (*proto.StatsResponse, error) {
 	usersCount, err := s.Storage.CountUsers(ctx)

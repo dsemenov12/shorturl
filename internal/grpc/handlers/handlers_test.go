@@ -130,6 +130,80 @@ func TestRedirect(t *testing.T) {
 	mockStorage.AssertExpectations(t)
 }
 
+// TestUserUrls тестирует метод UserUrls
+func TestUserUrls(t *testing.T) {
+	mockStorage := new(MockStorage)
+
+	expected := []models.ShortURLItem{
+		{ShortURL: "http://localhost:8080/abc123", OriginalURL: "http://example.com"},
+		{ShortURL: "http://localhost:8080/xyz456", OriginalURL: "http://example.org"},
+	}
+
+	mockStorage.On("GetUserURL", mock.Anything).Return(expected, nil)
+
+	server := &GRPCServer{
+		Storage: mockStorage,
+	}
+
+	resp, err := server.UserUrls(context.Background(), &proto.Empty{})
+
+	assert.NoError(t, err)
+	assert.Len(t, resp.Urls, 2)
+	assert.Equal(t, expected[0].ShortURL, resp.Urls[0].ShortUrl)
+	assert.Equal(t, expected[0].OriginalURL, resp.Urls[0].OriginalUrl)
+	assert.Equal(t, expected[1].ShortURL, resp.Urls[1].ShortUrl)
+	assert.Equal(t, expected[1].OriginalURL, resp.Urls[1].OriginalUrl)
+
+	mockStorage.AssertExpectations(t)
+}
+
+// TestDeleteUserUrls тестирует метод DeleteUserUrls
+func TestDeleteUserUrls(t *testing.T) {
+	mockStorage := new(MockStorage)
+	shortUrls := []string{"shortUrl1", "shortUrl2"}
+
+	mockStorage.On("Delete", mock.Anything, "shortUrl1").Return(nil)
+	mockStorage.On("Delete", mock.Anything, "shortUrl2").Return(nil)
+
+	server := &GRPCServer{
+		Storage: mockStorage,
+	}
+
+	req := &proto.DeleteUserUrlsRequest{
+		ShortUrls: shortUrls,
+	}
+
+	_, err := server.DeleteUserUrls(context.Background(), req)
+
+	assert.NoError(t, err)
+
+	mockStorage.AssertExpectations(t)
+}
+
+// TestDeleteUserUrls_FailDelete тестирует ошибку при вызове Delete
+func TestDeleteUserUrls_FailDelete(t *testing.T) {
+	mockStorage := new(MockStorage)
+	shortUrls := []string{"shortUrl1", "shortUrl2"}
+
+	mockStorage.On("Delete", mock.Anything, "shortUrl1").Return(nil)
+	mockStorage.On("Delete", mock.Anything, "shortUrl2").Return(assert.AnError)
+
+	server := &GRPCServer{
+		Storage: mockStorage,
+	}
+
+	req := &proto.DeleteUserUrlsRequest{
+		ShortUrls: shortUrls,
+	}
+
+	_, err := server.DeleteUserUrls(context.Background(), req)
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to delete URL shortUrl2")
+
+	mockStorage.AssertExpectations(t)
+}
+
 // TestInternalStats проверяет корректность работы метода InternalStats
 func TestInternalStats(t *testing.T) {
 	mockStorage := new(MockStorage)
