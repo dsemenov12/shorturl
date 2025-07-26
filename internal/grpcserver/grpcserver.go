@@ -14,6 +14,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 // RunGRPCServer запускает gRPC сервер с указанным адресом и хранилищем.
@@ -54,7 +55,7 @@ func RunGRPCServer(ctx context.Context, storage storage.Storage, grpcAddr string
 // Возвращаемое значение: ошибка запуска HTTP сервера (если есть).
 func RunGateway(ctx context.Context, grpcAddr, httpAddr string) error {
 	mux := runtime.NewServeMux()
-	opts := []grpc.DialOption{grpc.WithInsecure()}
+	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 
 	err := pb.RegisterShortenerServiceHandlerFromEndpoint(ctx, mux, grpcAddr, opts)
 	if err != nil {
