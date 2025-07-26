@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/dsemenov12/shorturl/internal/config"
+	"github.com/dsemenov12/shorturl/internal/grpcserver"
 	"github.com/dsemenov12/shorturl/internal/handlers"
 	"github.com/dsemenov12/shorturl/internal/middlewares/authcookiehandler"
 	"github.com/dsemenov12/shorturl/internal/middlewares/authhandler"
@@ -20,6 +21,7 @@ import (
 	"github.com/dsemenov12/shorturl/internal/storage"
 	"github.com/dsemenov12/shorturl/internal/storage/memory"
 	"github.com/dsemenov12/shorturl/internal/storage/pg"
+
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 )
@@ -89,6 +91,21 @@ func run() error {
 	if err = logger.Initialize(config.FlagLogLevel); err != nil {
 		return err
 	}
+
+	// Запускаем gRPC сервер
+	grpcAddr := config.FlagGRPCAddress
+	go func() {
+		if err := grpcserver.RunGRPCServer(ctx, storage, grpcAddr); err != nil {
+			logger.Log.Fatal("gRPC server error", zap.Error(err))
+		}
+	}()
+
+	// Запускаем grpc-gateway HTTP сервер
+	go func() {
+		if err := grpcserver.RunGateway(ctx, grpcAddr, config.FlagGRPCGatewayAddr); err != nil {
+			logger.Log.Fatal("grpc-gateway server error", zap.Error(err))
+		}
+	}()
 
 	router.Post("/", logger.RequestLogger(authhandler.AuthHandle(app.PostURL)))
 	router.Post("/api/shorten", logger.RequestLogger(authhandler.AuthHandle(app.ShortenPost)))
