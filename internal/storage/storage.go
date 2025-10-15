@@ -20,4 +20,8 @@ type Storage interface {
 	// Delete помечает сокращенный URL как удаленный (soft delete).
 	// Реальное удаление может происходить асинхронно.
 	Delete(ctx context.Context, shortKey string) error
+	// Возвращает количество уникальных URL.
+	CountURLs(ctx context.Context) (int, error)
+	// CountUsers возвращает количество уникальных пользователей в базе данных.
+	CountUsers(ctx context.Context) (int, error)
 }

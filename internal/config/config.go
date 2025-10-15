@@ -30,15 +30,28 @@ var (
 
 	// FlagConfigFilePath путь к файлу конфигурации.
 	FlagConfigFilePath string
+
+	// FlagTrustedSubnet указывает доверенную подсеть в формате CIDR.
+	FlagTrustedSubnet string
+
+	FlagGRPCAddress string
+
+	FlagGRPCGatewayAddr string
+
+	FlagEnableGRPCGateway bool
 )
 
 // Config структура для JSON-конфигурации
 type Config struct {
-	ServerAddress   string `json:"server_address"`
-	BaseURL         string `json:"base_url"`
-	FileStoragePath string `json:"file_storage_path"`
-	DatabaseDSN     string `json:"database_dsn"`
-	EnableHTTPS     bool   `json:"enable_https"`
+	ServerAddress      string `json:"server_address"`
+	BaseURL            string `json:"base_url"`
+	FileStoragePath    string `json:"file_storage_path"`
+	DatabaseDSN        string `json:"database_dsn"`
+	EnableHTTPS        bool   `json:"enable_https"`
+	TrustedSubnet      string `json:"trusted_subnet"`
+	GRPCAddress        string `json:"grpc_address"`
+	GRPCGatewayAddress string `json:"grpc_gateway_address"`
+	EnableGRPCGateway  bool   `json:"enable_grpc_gateway"`
 }
 
 // ParseFlags анализирует флаги командной строки и переменные окружения,
@@ -52,6 +65,10 @@ func ParseFlags() {
 	flag.BoolVar(&FlagEnableHTTPS, "s", false, "включение HTTPS в веб-сервере")
 	flag.StringVar(&FlagConfigFilePath, "c", "", "путь до JSON-файла конфигурации")
 	flag.StringVar(&FlagConfigFilePath, "config", "", "путь до JSON-файла конфигурации (аналог -c)")
+	flag.StringVar(&FlagTrustedSubnet, "t", "", "доверенная подсеть в формате CIDR")
+	flag.StringVar(&FlagGRPCAddress, "grpc-address", "127.0.0.1:9090", "адрес запуска gRPC-сервера")
+	flag.StringVar(&FlagGRPCGatewayAddr, "grpc-gateway-address", "127.0.0.1:8081", "адрес запуска grpc-gateway HTTP сервера")
+	flag.BoolVar(&FlagEnableGRPCGateway, "enable-grpc-gateway", false, "включить HTTP/REST gRPC-Gateway")
 
 	flag.Parse()
 
@@ -74,6 +91,20 @@ func ParseFlags() {
 	}
 	if envConfigFilePath := os.Getenv("CONFIG"); envConfigFilePath != "" {
 		FlagConfigFilePath = envConfigFilePath
+	}
+	if envTrustedSubnet := os.Getenv("TRUSTED_SUBNET"); envTrustedSubnet != "" {
+		FlagTrustedSubnet = envTrustedSubnet
+	}
+	if envGRPCAddress := os.Getenv("GRPC_ADDRESS"); envGRPCAddress != "" {
+		FlagGRPCAddress = envGRPCAddress
+	}
+	if envGRPCGatewayAddr := os.Getenv("GRPC_GATEWAY_ADDRESS"); envGRPCGatewayAddr != "" {
+		FlagGRPCGatewayAddr = envGRPCGatewayAddr
+	}
+	if envEnableGRPCGateway := os.Getenv("ENABLE_GRPC_GATEWAY"); envEnableGRPCGateway != "" {
+		if val, err := strconv.ParseBool(envEnableGRPCGateway); err == nil {
+			FlagEnableGRPCGateway = val
+		}
 	}
 
 	if FlagConfigFilePath != "" {
@@ -110,5 +141,17 @@ func loadConfigFromFile(path string) {
 	}
 	if !FlagEnableHTTPS { // Если по умолчанию false, заменяем значением из конфига
 		FlagEnableHTTPS = cfg.EnableHTTPS
+	}
+	if FlagTrustedSubnet == "" {
+		FlagTrustedSubnet = cfg.TrustedSubnet
+	}
+	if FlagGRPCAddress == "127.0.0.1:9090" {
+		FlagGRPCAddress = cfg.GRPCAddress
+	}
+	if FlagGRPCGatewayAddr == "127.0.0.1:8081" {
+		FlagGRPCGatewayAddr = cfg.GRPCGatewayAddress
+	}
+	if !FlagEnableGRPCGateway {
+		FlagEnableGRPCGateway = cfg.EnableGRPCGateway
 	}
 }

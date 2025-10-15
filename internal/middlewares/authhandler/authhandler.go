@@ -45,7 +45,7 @@ func AuthHandle(handlerFunc http.HandlerFunc) http.HandlerFunc {
 			}
 		}
 
-		r = r.WithContext(context.WithValue(context.Background(), auth.UserIDKey, userID))
+		r = r.WithContext(context.WithValue(r.Context(), auth.UserIDKey, userID))
 
 		handlerFunc(w, r)
 	})

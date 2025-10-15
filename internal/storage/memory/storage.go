@@ -52,3 +52,16 @@ func (s *StorageMemory) Delete(ctx context.Context, shortKey string) (err error)
 	delete(s.Data, shortKey)
 	return nil
 }
+
+// CountURLs возвращает количество уникальных URL.
+func (s *StorageMemory) CountURLs(ctx context.Context) (int, error) {
+	s.mx.RLock()
+	defer s.mx.RUnlock()
+	return len(s.Data), nil
+}
+
+// CountUsers возвращает количество уникальных пользователей в базе данных.
+// В Memory-хранилище нет user_id, поэтому метод всегда возвращает 0.
+func (s *StorageMemory) CountUsers(ctx context.Context) (int, error) {
+	return 0, nil
+}
